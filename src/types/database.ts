@@ -52,6 +52,13 @@ export interface StoreSettings {
   facebook_url: string | null;
   instagram_url: string | null;
   twitter_url: string | null;
+  theme_settings?: {
+    primaryColor?: string;
+    secondaryColor?: string;
+    backgroundColor?: string;
+    backgroundGradient?: string;
+    fontFamily?: string;
+  } | null;
   updated_at: string;
 }
 
