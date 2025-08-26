@@ -120,18 +120,72 @@ function App() {
   }, [storeSettings]);
 
   const fetchStoreSettings = async () => {
-    const { data, error } = await supabase
-      .from('store_settings')
-      .select('*')
-      .single();
+    try {
+      const { data, error } = await supabase
+        .from('store_settings')
+        .select('*')
+        .limit(1)
+        .maybeSingle();
 
-    if (error) {
-      console.error("Error fetching store settings:", error);
-      // Potentially set some default settings or handle error state
-      return;
-    }
-    if (data) {
-      setStoreSettings(data);
+      if (error) {
+        console.error("Error fetching store settings:", error);
+        // Set default settings if fetch fails
+        setStoreSettings({
+          id: '00000000-0000-0000-0000-000000000001',
+          store_name: 'متجر العطور',
+          store_description: 'أفضل العطور والمنتجات العالمية',
+          logo_url: null,
+          meta_title: 'متجر العطور',
+          meta_description: 'أفضل العطور والمنتجات العالمية',
+          theme_settings: {
+            primaryColor: '#c7a17a',
+            secondaryColor: '#fff',
+            fontFamily: 'Cairo, sans-serif',
+            backgroundColor: '#000',
+            backgroundGradient: 'linear-gradient(135deg, #232526 0%, #414345 100%)'
+          }
+        } as StoreSettings);
+        return;
+      }
+      
+      if (data) {
+        setStoreSettings(data);
+      } else {
+        // No data found, set default settings
+        setStoreSettings({
+          id: '00000000-0000-0000-0000-000000000001',
+          store_name: 'متجر العطور',
+          store_description: 'أفضل العطور والمنتجات العالمية',
+          logo_url: null,
+          meta_title: 'متجر العطور',
+          meta_description: 'أفضل العطور والمنتجات العالمية',
+          theme_settings: {
+            primaryColor: '#c7a17a',
+            secondaryColor: '#fff',
+            fontFamily: 'Cairo, sans-serif',
+            backgroundColor: '#000',
+            backgroundGradient: 'linear-gradient(135deg, #232526 0%, #414345 100%)'
+          }
+        } as StoreSettings);
+      }
+    } catch (error) {
+      console.error("Unexpected error fetching store settings:", error);
+      // Set default settings on any unexpected error
+      setStoreSettings({
+        id: '00000000-0000-0000-0000-000000000001',
+        store_name: 'متجر العطور',
+        store_description: 'أفضل العطور والمنتجات العالمية',
+        logo_url: null,
+        meta_title: 'متجر العطور',
+        meta_description: 'أفضل العطور والمنتجات العالمية',
+        theme_settings: {
+          primaryColor: '#c7a17a',
+          secondaryColor: '#fff',
+          fontFamily: 'Cairo, sans-serif',
+          backgroundColor: '#000',
+          backgroundGradient: 'linear-gradient(135deg, #232526 0%, #414345 100%)'
+        }
+      } as StoreSettings);
     }
   };
 
