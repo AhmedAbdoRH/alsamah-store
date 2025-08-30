@@ -66,7 +66,7 @@ export default function ProductCard({ title, description, imageUrl, price, saleP
       <Link to={`/product/${id}`} className="block">
         <div className="relative aspect-[4/3] w-full">
           <img
-            src={imageUrl?.includes('supabase.co') ? '/placeholder-product.jpg' : (imageUrl || '/placeholder-product.jpg')}
+            src={imageUrl || '/placeholder-product.jpg'}
             alt={title}
             className="absolute inset-0 w-full h-full object-cover"
             onError={(e) => {
