@@ -66,9 +66,13 @@ export default function ProductCard({ title, description, imageUrl, price, saleP
       <Link to={`/product/${id}`} className="block">
         <div className="relative aspect-[4/3] w-full">
           <img
-            src={imageUrl}
+            src={imageUrl?.includes('supabase.co') ? '/placeholder-product.jpg' : (imageUrl || '/placeholder-product.jpg')}
             alt={title}
             className="absolute inset-0 w-full h-full object-cover"
+            onError={(e) => {
+              const target = e.target as HTMLImageElement;
+              target.src = '/placeholder-product.jpg';
+            }}
           />
           <div className="absolute inset-0 bg-gradient-to-t from-primary/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-150" />
         </div>

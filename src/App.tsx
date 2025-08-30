@@ -134,7 +134,7 @@ function App() {
           id: '00000000-0000-0000-0000-000000000001',
           store_name: 'متجر العطور',
           store_description: 'أفضل العطور والمنتجات العالمية',
-          logo_url: null,
+          logo_url: '/logo.png',
           meta_title: 'متجر العطور',
           meta_description: 'أفضل العطور والمنتجات العالمية',
           theme_settings: {
@@ -156,7 +156,7 @@ function App() {
           id: '00000000-0000-0000-0000-000000000001',
           store_name: 'متجر العطور',
           store_description: 'أفضل العطور والمنتجات العالمية',
-          logo_url: null,
+          logo_url: '/logo.png',
           meta_title: 'متجر العطور',
           meta_description: 'أفضل العطور والمنتجات العالمية',
           theme_settings: {
@@ -175,7 +175,7 @@ function App() {
         id: '00000000-0000-0000-0000-000000000001',
         store_name: 'متجر العطور',
         store_description: 'أفضل العطور والمنتجات العالمية',
-        logo_url: null,
+        logo_url: '/logo.png',
         meta_title: 'متجر العطور',
         meta_description: 'أفضل العطور والمنتجات العالمية',
         theme_settings: {
