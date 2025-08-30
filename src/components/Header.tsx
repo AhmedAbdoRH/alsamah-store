@@ -430,7 +430,7 @@ export default function Header({ storeSettings }: HeaderProps) {
                                     </button>
                                   </div>
                                 </div>
-                              </div>
+                                src={product.displayImage || '/placeholder-product.jpg'}
                               <button 
                                 onClick={(e) => {
                                   e.stopPropagation();

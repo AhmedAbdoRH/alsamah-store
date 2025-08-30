@@ -199,7 +199,7 @@ export default function ProductDetails() {
                 <div className="w-full aspect-[4/3] bg-gray-200 relative rounded-t-lg md:rounded-none md:rounded-s-lg overflow-hidden">
                   {prevImageIndexState !== null && isTransitioning && (
                     <img
-                      src={images[prevImageIndexState]?.includes('supabase.co') ? '/placeholder-product.jpg' : (images[prevImageIndexState] || '/placeholder-product.jpg')}
+                      src={images[prevImageIndexState] || '/placeholder-product.jpg'}
                       alt=""
                       className="absolute inset-0 w-full h-full object-cover"
                       style={{
@@ -218,7 +218,7 @@ export default function ProductDetails() {
                     />
                   )}
                   <img
-                    src={images[currentImageIndex]?.includes('supabase.co') ? '/placeholder-product.jpg' : (images[currentImageIndex] || '/placeholder-product.jpg')}
+                    src={images[currentImageIndex] || '/placeholder-product.jpg'}
                     alt={service.title}
                     className="absolute inset-0 w-full h-full object-cover"
                     style={{
@@ -333,7 +333,7 @@ export default function ProductDetails() {
                   onClick={() => navigate(`/product/${item.id}`)}
                 >
                   <img
-                    src={imageUrl?.includes('supabase.co') ? '/placeholder-product.jpg' : (imageUrl || '/placeholder-product.jpg')}
+                    src={imageUrl || '/placeholder-product.jpg'}
                     alt={item.title}
                     className="w-full h-24 md:h-40 object-cover rounded"
                     onError={(e) => {
