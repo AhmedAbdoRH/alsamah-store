@@ -229,15 +229,9 @@ export default function Header({ storeSettings }: HeaderProps) {
             
             <Link to="/" className="flex-shrink-0">
               <img 
-                src={storeSettings?.logo_url?.includes('supabase.co') ? '/logo.png' : (storeSettings?.logo_url || '/logo.png')}
+                src={storeSettings?.logo_url || '/logo.png'}
                 alt={storeSettings?.store_name || 'الشعار'} 
                 className="h-16 md:h-20 w-auto"
-                onError={(e) => {
-                  const target = e.target as HTMLImageElement;
-                  if (target.src !== '/logo.png') {
-                    target.src = '/logo.png';
-                  }
-                }}
               />
             </Link>
           </div>
@@ -430,7 +424,7 @@ export default function Header({ storeSettings }: HeaderProps) {
                                     </button>
                                   </div>
                                 </div>
-                                src={product.displayImage || '/placeholder-product.jpg'}
+                              </div>
                               <button 
                                 onClick={(e) => {
                                   e.stopPropagation();
