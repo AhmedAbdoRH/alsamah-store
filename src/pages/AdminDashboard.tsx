@@ -1498,6 +1498,6 @@ export default function AdminDashboard({ onSettingsUpdate }: AdminDashboardProps
           ← العودة للصفحة الرئيسية
         </button>
       </footer>
-    </div>
+    </div> 
   );
 }
