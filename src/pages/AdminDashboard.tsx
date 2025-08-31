@@ -28,6 +28,7 @@ export default function AdminDashboard({ onSettingsUpdate }: AdminDashboardProps
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [uploadingImage, setUploadingImage] = useState(false);
+  const [removingBackground, setRemovingBackground] = useState(false);
   const [uploadingBannerImage, setUploadingBannerImage] = useState(false);
   const [editingService, setEditingService] = useState<string | null>(null);
   const [uploadingLogo, setUploadingLogo] = useState(false);
@@ -36,6 +37,10 @@ export default function AdminDashboard({ onSettingsUpdate }: AdminDashboardProps
   const [editingBanner, setEditingBanner] = useState<string | null>(null);
   const [deleteModal, setDeleteModal] = useState<{ id: string; type: 'category' | 'service' | 'banner' | 'subcategory' } | null>(null);
   const [activeTab, setActiveTab] = useState<'products' | 'banners' | 'testimonials' | 'store'>('products');
+
+  // Remove BG switch state and original image backup (session only)
+  const [removeBgSwitch, setRemoveBgSwitch] = useState(false);
+  const [originalServiceImageUrl, setOriginalServiceImageUrl] = useState<string | null>(null);
 
   // Testimonials state
   const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
@@ -111,6 +116,220 @@ export default function AdminDashboard({ onSettingsUpdate }: AdminDashboardProps
       setTestimonials([]);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  // Remove background from an existing image URL (uses same algorithm)
+  async function removeBackgroundFromImageUrl(url: string): Promise<File> {
+    const img = new window.Image();
+    img.crossOrigin = 'anonymous';
+    await new Promise((resolve, reject) => {
+      img.onload = () => resolve(null);
+      img.onerror = reject;
+      img.src = url;
+    });
+
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    if (!ctx) throw new Error('تعذر إنشاء سياق الرسم');
+    canvas.width = img.width;
+    canvas.height = img.height;
+    ctx.drawImage(img, 0, 0);
+
+    const { data, width, height } = ctx.getImageData(0, 0, canvas.width, canvas.height);
+
+    const dist = (r1:number,g1:number,b1:number,r2:number,g2:number,b2:number) => {
+      const dr=r1-r2, dg=g1-g2, db=b1-b2;
+      return Math.sqrt(dr*dr+dg*dg+db*db);
+    };
+
+    function avgCorner(x0:number, y0:number, w:number, h:number){
+      let sr=0, sg=0, sb=0, c=0;
+      for(let y=y0; y<y0+h; y++){
+        for(let x=x0; x<x0+w; x++){
+          const idx = (y*width + x) * 4;
+          sr += data[idx]; sg += data[idx+1]; sb += data[idx+2]; c++;
+        }
+      }
+      return [sr/c, sg/c, sb/c] as [number,number,number];
+    }
+
+    const sample = 10;
+    const c1 = avgCorner(0, 0, sample, sample);
+    const c2 = avgCorner(width-sample, 0, sample, sample);
+    const c3 = avgCorner(0, height-sample, sample, sample);
+    const c4 = avgCorner(width-sample, height-sample, sample, sample);
+    const bg = [
+      (c1[0]+c2[0]+c3[0]+c4[0])/4,
+      (c1[1]+c2[1]+c3[1]+c4[1])/4,
+      (c1[2]+c2[2]+c3[2]+c4[2])/4,
+    ] as [number,number,number];
+
+    const threshold = 60;
+    const feather = 20;
+
+    const imgData = ctx.getImageData(0, 0, width, height);
+    const d = imgData.data;
+    for (let i = 0; i < d.length; i += 4) {
+      const r=d[i], g=d[i+1], b=d[i+2];
+      const distance = dist(r,g,b,bg[0],bg[1],bg[2]);
+      if (distance <= threshold) {
+        d[i+3] = 0;
+      } else if (distance <= threshold + feather) {
+        const t = (distance - threshold) / feather;
+        d[i+3] = Math.min(255, Math.max(0, Math.round(255 * t)));
+      }
+    }
+    ctx.putImageData(imgData, 0, 0);
+
+    const blob: Blob = await new Promise((resolve, reject) => {
+      canvas.toBlob((b) => b ? resolve(b) : reject(new Error('فشل إنشاء الصورة')), 'image/png');
+    });
+    return new File([blob], `${Date.now()}_bg_removed.png`, { type: 'image/png' });
+  }
+
+  const handleToggleRemoveBgSwitch = async (checked: boolean) => {
+    if (!newService.image_url) return;
+    if (checked) {
+      setRemovingBackground(true);
+      try {
+        if (!originalServiceImageUrl) setOriginalServiceImageUrl(newService.image_url);
+        const processed = await removeBackgroundFromImageUrl(newService.image_url);
+        const fileExt = processed.name.split('.').pop();
+        const fileName = `${Date.now()}_${Math.random().toString(36).substring(2)}.${fileExt}`;
+        const { error: uploadError } = await supabase.storage
+          .from('services')
+          .upload(fileName, processed, { upsert: true });
+        if (uploadError) throw uploadError;
+        const { data: { publicUrl } } = supabase.storage.from('services').getPublicUrl(fileName);
+        setNewService(prev => ({ ...prev, image_url: publicUrl }));
+        setRemoveBgSwitch(true);
+        setSuccessMsg('تم تحويل الصورة إلى خلفية شفافة');
+      } catch (err: any) {
+        setRemoveBgSwitch(false);
+        setError(`تعذر إزالة الخلفية: ${err.message}`);
+      } finally {
+        setRemovingBackground(false);
+      }
+    } else {
+      // Revert to original in-session
+      if (originalServiceImageUrl) {
+        setNewService(prev => ({ ...prev, image_url: originalServiceImageUrl! }));
+      }
+      setRemoveBgSwitch(false);
+    }
+  };
+
+  // إزالة الخلفية داخل المتصفح باستخدام كانفس عبر تقدير لون الخلفية من زوايا الصورة
+  async function removeBackgroundFromFile(file: File): Promise<File> {
+    // حمل الصورة
+    const img = new window.Image();
+    const dataUrl: string = await new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+    await new Promise((resolve, reject) => {
+      img.onload = () => resolve(null);
+      img.onerror = reject;
+      img.src = dataUrl;
+    });
+
+    // ارسم على كانفس
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    if (!ctx) throw new Error('تعذر إنشاء سياق الرسم');
+    canvas.width = img.width;
+    canvas.height = img.height;
+    ctx.drawImage(img, 0, 0);
+
+    const { data, width, height } = ctx.getImageData(0, 0, canvas.width, canvas.height);
+
+    // دالة مسافة اللون
+    const dist = (r1:number,g1:number,b1:number,r2:number,g2:number,b2:number) => {
+      const dr=r1-r2, dg=g1-g2, db=b1-b2;
+      return Math.sqrt(dr*dr+dg*dg+db*db);
+    };
+
+    // احسب متوسط لون الزوايا (منطقة 10x10 من كل زاوية)
+    function avgCorner(x0:number, y0:number, w:number, h:number){
+      let sr=0, sg=0, sb=0, c=0;
+      for(let y=y0; y<y0+h; y++){
+        for(let x=x0; x<x0+w; x++){
+          const idx = (y*width + x) * 4;
+          sr += data[idx]; sg += data[idx+1]; sb += data[idx+2]; c++;
+        }
+      }
+      return [sr/c, sg/c, sb/c] as [number,number,number];
+    }
+
+    const sample = 10;
+    const c1 = avgCorner(0, 0, sample, sample);
+    const c2 = avgCorner(width-sample, 0, sample, sample);
+    const c3 = avgCorner(0, height-sample, sample, sample);
+    const c4 = avgCorner(width-sample, height-sample, sample, sample);
+    const bg = [
+      (c1[0]+c2[0]+c3[0]+c4[0])/4,
+      (c1[1]+c2[1]+c3[1]+c4[1])/4,
+      (c1[2]+c2[2]+c3[2]+c4[2])/4,
+    ] as [number,number,number];
+
+    // عتبات الإزالة والتدرج (feather)
+    const threshold = 60; // كلما زادت كان الإزالة أشد
+    const feather = 20;   // نطاق تدرّج الألفا حول العتبة
+
+    // عدّل ألفا البكسلات
+    const imgData = ctx.getImageData(0, 0, width, height);
+    const d = imgData.data;
+    for (let i = 0; i < d.length; i += 4) {
+      const r=d[i], g=d[i+1], b=d[i+2];
+      const distance = dist(r,g,b,bg[0],bg[1],bg[2]);
+      if (distance <= threshold) {
+        d[i+3] = 0; // شفاف بالكامل
+      } else if (distance <= threshold + feather) {
+        const t = (distance - threshold) / feather; // 0..1
+        d[i+3] = Math.min(255, Math.max(0, Math.round(255 * t)));
+      }
+    }
+    ctx.putImageData(imgData, 0, 0);
+
+    // حوّل إلى PNG مع ألفا
+    const blob: Blob = await new Promise((resolve, reject) => {
+      canvas.toBlob((b) => b ? resolve(b) : reject(new Error('فشل إنشاء الصورة')), 'image/png');
+    });
+    return new File([blob], `${Date.now()}_bg_removed.png`, { type: 'image/png' });
+  }
+
+  // رافع صورة مع إزالة الخلفية ورفعها إلى Supabase
+  const handleImageUploadRemoveBg = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    setRemovingBackground(true);
+    try {
+      if (!file.type.startsWith('image/')) throw new Error('الرجاء اختيار ملف صورة صالح');
+
+      // قلل الحجم أولاً إذا لزم
+      const resized = await resizeImageIfNeeded(file, 2);
+      // أزل الخلفية
+      const processed = await removeBackgroundFromFile(resized);
+
+      const fileExt = processed.name.split('.').pop();
+      const fileName = `${Date.now()}_${Math.random().toString(36).substring(2)}.${fileExt}`;
+      const { error: uploadError } = await supabase.storage
+        .from('services')
+        .upload(fileName, processed, { upsert: true });
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage.from('services').getPublicUrl(fileName);
+      setNewService(prev => ({ ...prev, image_url: publicUrl }));
+      setSuccessMsg('تمت إزالة الخلفية ورفع الصورة بنجاح!');
+    } catch (err: any) {
+      setError(`تعذر إزالة الخلفية: ${err.message}`);
+    } finally {
+      setRemovingBackground(false);
+      // امسح قيمة المدخل حتى يمكن اختيار نفس الملف لاحقاً
+      event.target.value = '';
     }
   };
 
@@ -1401,12 +1620,30 @@ export default function AdminDashboard({ onSettingsUpdate }: AdminDashboardProps
                             <input type="file" accept="image/*" onChange={handleImageUpload} className="hidden" id="image-upload" disabled={uploadingImage || isLoading}/>
                         </div>
 
+                        {/* مفتاح تحويل الصورة إلى خلفية شفافة أسفل المعاينة */}
+
                         {newService.image_url && !uploadingImage && (
-                          <div className="mt-3 flex items-center justify-center gap-4 bg-gray-900/50 p-2 rounded border border-gray-700">
-                            <img src={newService.image_url} alt="معاينة" className="w-16 h-16 object-cover rounded border border-gray-600" />
-                            <span className="text-gray-400 text-xs">الصورة الحالية/الجديدة</span>
-                            <button type="button" onClick={() => setNewService({...newService, image_url: ''})} className="text-red-500 hover:text-red-400 p-1" title="إزالة الصورة"><X size={16}/></button>
-                          </div>
+                          <>
+                            <div className="mt-3 flex items-center justify-center gap-4 bg-gray-900/50 p-2 rounded border border-gray-700">
+                              <img src={newService.image_url} alt="معاينة" className="w-16 h-16 object-cover rounded border border-gray-600" />
+                              <span className="text-gray-400 text-xs">الصورة الحالية/الجديدة</span>
+                              <button type="button" onClick={() => { setNewService({...newService, image_url: ''}); setRemoveBgSwitch(false); setOriginalServiceImageUrl(null); }} className="text-red-500 hover:text-red-400 p-1" title="إزالة الصورة"><X size={16}/></button>
+                            </div>
+                            <div className="mt-2 flex items-center justify-center">
+                              <label className="flex items-center gap-2 text-xs text-gray-300 select-none">
+                                {/* صندوق تحديد بسيط على يمين النص مع RTL */}
+                                <input
+                                  type="checkbox"
+                                  className="h-4 w-4 accent-emerald-500 rounded border border-gray-500 bg-gray-700 focus:ring-0"
+                                  checked={removeBgSwitch}
+                                  onChange={(e) => handleToggleRemoveBgSwitch(e.target.checked)}
+                                  disabled={removingBackground || isLoading}
+                                />
+                                <span className="leading-none">بدون خلفية</span>
+                                {removingBackground && <span className="text-[10px] text-gray-400">جاري المعالجة...</span>}
+                              </label>
+                            </div>
+                          </>
                         )}
                         
                         <select value={selectedCategory} onChange={(e) => { setSelectedCategory(e.target.value); setSelectedSubcategory(''); }} className="w-full p-3 rounded text-white bg-gray-700 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none" required disabled={isLoading || categories.length === 0}>
