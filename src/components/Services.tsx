@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import ServiceCard from './ServiceCard';
 import { supabase } from '../lib/supabase';
-import type { Service, Category } from '../types/database';
+import type { Service, Category, Subcategory } from '../types/database';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link } from 'react-router-dom';
 
@@ -12,7 +12,9 @@ const accentColor = '#d99323';
 export default function Services() {
   const [services, setServices] = useState<Service[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
+  const [subcategories, setSubcategories] = useState<Subcategory[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string | 'featured' | 'best_sellers' | null>(null);
+  const [openCategoryId, setOpenCategoryId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [hasFeaturedProducts, setHasFeaturedProducts] = useState(false);
@@ -21,6 +23,7 @@ export default function Services() {
   useEffect(() => {
     fetchCategories();
     fetchServices();
+    fetchSubcategories();
   }, []);
 
   const fetchCategories = async () => {
@@ -66,6 +69,26 @@ export default function Services() {
       setIsLoading(false);
     }
   }, []);
+
+  const fetchSubcategories = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('subcategories')
+        .select('id, name_ar, description_ar, category_id')
+        .order('name_ar');
+
+      if (error) throw error;
+      const mapped: Subcategory[] = (data || []).map((sc: any) => ({
+        id: sc.id,
+        name: sc.name_ar ?? '',
+        description: sc.description_ar ?? null,
+        category_id: sc.category_id,
+      }));
+      setSubcategories(mapped);
+    } catch (err) {
+      console.error('Failed to fetch subcategories', err);
+    }
+  };
 
   const filteredServices = useCallback((): Service[] => {
     if (!selectedCategory) return services;
@@ -199,7 +222,10 @@ export default function Services() {
             {categories.map((category) => (
               <motion.button
                 key={category.id}
-                onClick={() => setSelectedCategory(category.id)}
+                onClick={() => {
+                  setSelectedCategory(category.id);
+                  setOpenCategoryId(prev => (prev === category.id ? null : category.id));
+                }}
                 className={`p-4 rounded-xl transition-all duration-300 ${
                   category.id === selectedCategory
                     ? `bg-[var(--color-secondary,#34C759)] text-black font-bold shadow-md`
@@ -215,6 +241,34 @@ export default function Services() {
             ))}
           </AnimatePresence>
         </motion.div>
+
+        {/* التصنيفات الفرعية تحت القسم المحدد */}
+        {openCategoryId && (
+          <motion.div
+            className="mb-8"
+            initial={{ opacity: 0, y: -8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.2 }}
+          >
+            <div className="flex flex-wrap gap-2 justify-center">
+              {subcategories.filter(sc => sc.category_id === openCategoryId).length === 0 ? (
+                <span className="text-gray-300 text-sm">لا توجد أقسام فرعية لهذا القسم.</span>
+              ) : (
+                subcategories
+                  .filter(sc => sc.category_id === openCategoryId)
+                  .map(sc => (
+                    <Link
+                      key={sc.id}
+                      to={`/subcategory/${sc.id}`}
+                      className="px-4 py-2 rounded-full text-base bg-white/70 text-black border border-white/80 shadow-sm hover:bg-white transition-colors"
+                    >
+                      {sc.name}
+                    </Link>
+                  ))
+              )}
+            </div>
+          </motion.div>
+        )}
 
         {/* Products Grid */}
         <motion.div

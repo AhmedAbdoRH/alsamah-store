@@ -22,6 +22,7 @@ export default function Header({ storeSettings }: HeaderProps) {
   const [showCartPreview, setShowCartPreview] = useState(false);
   const cartPreviewTimer = useRef<NodeJS.Timeout | null>(null);
   const [categories, setCategories] = useState<Category[]>([]);
+  const [subcatsByCategory, setSubcatsByCategory] = useState<Record<string, { id: string; name: string }[]>>({});
   const [loadingCategories, setLoadingCategories] = useState(true);
   const menuRef = useRef<HTMLDivElement>(null);
   const searchRef = useRef<HTMLDivElement>(null);
@@ -108,11 +109,30 @@ export default function Header({ storeSettings }: HeaderProps) {
       try {
         const { data, error } = await supabase
           .from('categories')
-          .select('*')
-          .order('name');
+          .select('id, name_ar, created_at, description_ar')
+          .order('name_ar');
 
         if (error) throw error;
-        setCategories(data || []);
+        const mapped = (data || []).map((c: any) => ({
+          id: c.id as string,
+          name: (c.name_ar as string) || '',
+          description: (c.description_ar as string) || null,
+          created_at: (c.created_at as string) || ''
+        }));
+        setCategories(mapped);
+        // Fetch subcategories for all categories
+        const { data: subs, error: subErr } = await supabase
+          .from('subcategories')
+          .select('id, name_ar, category_id')
+          .order('name_ar');
+        if (subErr) throw subErr;
+        const grouped: Record<string, { id: string; name: string }[]> = {};
+        (subs || []).forEach((s: any) => {
+          const key = s.category_id as string;
+          if (!grouped[key]) grouped[key] = [];
+          grouped[key].push({ id: s.id as string, name: (s.name_ar as string) || '' });
+        });
+        setSubcatsByCategory(grouped);
       } catch (err) {
         console.error('Error fetching categories:', err);
       } finally {
@@ -586,6 +606,21 @@ export default function Header({ storeSettings }: HeaderProps) {
                             >
                               {category.name}
                             </Link>
+                            {subcatsByCategory[category.id] && subcatsByCategory[category.id].length > 0 && (
+                              <ul className="px-3 pb-3 flex flex-col gap-1">
+                                {subcatsByCategory[category.id].map((sc) => (
+                                  <li key={sc.id}>
+                                    <Link
+                                      to={`/subcategory/${sc.id}`}
+                                      className="block px-3 py-2 text-white/80 hover:text-white hover:bg-white/5 rounded-md text-sm"
+                                      onClick={() => setIsMenuOpen(false)}
+                                    >
+                                      • {sc.name}
+                                    </Link>
+                                  </li>
+                                ))}
+                              </ul>
+                            )}
                           </li>
                         ))}
                       </ul>

@@ -1,64 +1,75 @@
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import ServiceCard from '../components/ServiceCard';
-import type { Service, Category } from '../types/database';
-interface SubcategoryItem { id: string; name: string; }
+import type { Service } from '../types/database';
 
-export default function CategoryProducts() {
-  const { categoryId } = useParams<{ categoryId: string }>();
+interface Subcategory {
+  id: string;
+  name: string;
+  description: string | null;
+  category_id: string;
+  created_at: string;
+}
+
+interface Category {
+  id: string;
+  name: string;
+}
+
+export default function SubcategoryProducts() {
+  const { subcategoryId } = useParams<{ subcategoryId: string }>();
   const [services, setServices] = useState<Service[]>([]);
+  const [subcategory, setSubcategory] = useState<Subcategory | null>(null);
   const [category, setCategory] = useState<Category | null>(null);
-  const [subcategories, setSubcategories] = useState<SubcategoryItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (categoryId) {
-      fetchCategoryAndServices();
+    if (subcategoryId) {
+      fetchSubcategoryAndServices();
     }
-  }, [categoryId]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [subcategoryId]);
 
-  const fetchCategoryAndServices = async () => {
+  const fetchSubcategoryAndServices = async () => {
     try {
       setIsLoading(true);
       setError(null);
 
-      // Fetch category details
-      const { data: categoryData, error: categoryError } = await supabase
-        .from('categories')
-        .select('id, name_ar, description_ar, created_at')
-        .eq('id', categoryId)
+      // Fetch subcategory details with parent category_id
+      const { data: subcat, error: subcatErr } = await supabase
+        .from('subcategories')
+        .select('id, name_ar, description_ar, category_id, created_at')
+        .eq('id', subcategoryId)
         .single();
+      if (subcatErr) throw subcatErr;
+      setSubcategory({
+        id: subcat.id,
+        name: subcat.name_ar,
+        description: subcat.description_ar,
+        category_id: subcat.category_id,
+        created_at: (subcat as any).created_at ?? ''
+      } as Subcategory);
 
-      if (categoryError) throw categoryError;
-      setCategory({
-        id: categoryData.id,
-        name: categoryData.name_ar,
-        description: categoryData.description_ar,
-        created_at: categoryData.created_at
-      } as Category);
+      // Fetch parent category
+      if (subcat?.category_id) {
+        const { data: cat, error: catErr } = await supabase
+          .from('categories')
+          .select('id, name_ar')
+          .eq('id', subcat.category_id)
+          .single();
+        if (catErr) throw catErr;
+        setCategory({ id: cat.id, name: (cat as any).name_ar } as Category);
+      }
 
-      // Fetch services for this category
+      // Fetch services for this subcategory
       const { data: servicesData, error: servicesError } = await supabase
         .from('services')
         .select('*')
-        .eq('category_id', categoryId);
-
+        .eq('subcategory_id', subcategoryId);
       if (servicesError) throw servicesError;
       setServices(servicesData || []);
-
-      // Fetch subcategories for this category (if table exists)
-      const { data: subcats, error: subErr } = await supabase
-        .from('subcategories')
-        .select('id, name_ar')
-        .eq('category_id', categoryId)
-        .order('display_order', { ascending: true });
-      if (!subErr && subcats) {
-        setSubcategories(subcats.map((s: any) => ({ id: s.id, name: s.name_ar })));
-      } else {
-        setSubcategories([]);
-      }
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -82,7 +93,7 @@ export default function CategoryProducts() {
     );
   }
 
-  if (error || !category) {
+  if (error || !subcategory) {
     return (
       <div
         className="min-h-screen pt-24 flex flex-col items-center justify-center gap-4"
@@ -93,7 +104,7 @@ export default function CategoryProducts() {
           backgroundAttachment: 'fixed',
         }}
       >
-        <div className="text-xl text-secondary">{error || 'القسم غير موجود'}</div>
+        <div className="text-xl text-secondary">{error || 'القسم الفرعي غير موجود'}</div>
         <Link
           to="/"
           className="bg-accent text-white px-6 py-2 rounded-lg hover:bg-accent-light transition-colors"
@@ -115,36 +126,30 @@ export default function CategoryProducts() {
       }}
     >
       <div className="container mx-auto px-4 py-8">
-        <div className="mb-8">
-          <Link to="/" className="text-secondary hover:text-accent transition-colors">
-            ← العودة للرئيسية
-          </Link>
+        {/* Breadcrumbs */}
+        <div className="mb-8 text-secondary">
+          <Link to="/" className="hover:text-accent transition-colors">الرئيسية</Link>
+          {category && (
+            <>
+              <span className="mx-2">/</span>
+              <Link to={`/category/${category.id}`} className="hover:text-accent transition-colors">
+                {category.name}
+              </Link>
+            </>
+          )}
+          <span className="mx-2">/</span>
+          <span className="text-accent">{subcategory.name}</span>
         </div>
 
         <div className="bg-white/5 backdrop-blur-xl rounded-2xl p-8 border border-white/10 shadow-2xl shadow-black/40">
-          <h1 className="text-3xl font-bold mb-12 text-accent">{category.name}</h1>
-          {category.description && (
-            <p className="text-secondary/70 mb-8">{category.description}</p>
-          )}
-
-          {/* Subcategories list */}
-          {subcategories.length > 0 && (
-            <div className="mb-8 flex flex-wrap gap-3">
-              {subcategories.map((sc) => (
-                <Link
-                  key={sc.id}
-                  to={`/subcategory/${sc.id}`}
-                  className="px-4 py-2 rounded-full bg-white/10 text-white hover:bg-white/20 transition-colors border border-white/10"
-                >
-                  {sc.name}
-                </Link>
-              ))}
-            </div>
+          <h1 className="text-3xl font-bold mb-12 text-accent">{subcategory.name}</h1>
+          {subcategory.description && (
+            <p className="text-secondary/70 mb-8">{subcategory.description}</p>
           )}
 
           {services.length === 0 ? (
             <p className="text-center text-secondary/70 py-8">
-              لا توجد منتجات في هذا القسم حالياً
+              لا توجد منتجات في هذا القسم الفرعي حالياً
             </p>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">

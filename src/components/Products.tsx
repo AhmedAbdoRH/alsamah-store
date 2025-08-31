@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import ServiceCard from './ServiceCard';
 import { supabase } from '../lib/supabase';
-import type { Service, Category } from '../types/database';
+import type { Service, Category, Subcategory } from '../types/database';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const lightGold = '#FFD700';
@@ -11,13 +12,16 @@ const accentColor = '#d99323'; // New accent color for selected categories
 export default function Services() {
   const [services, setServices] = useState<Service[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
+  const [subcategories, setSubcategories] = useState<Subcategory[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [openCategoryId, setOpenCategoryId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     fetchServices();
     fetchCategories();
+    fetchSubcategories();
   }, []);
 
   const fetchCategories = async () => {
@@ -31,6 +35,27 @@ export default function Services() {
       setCategories(data || []);
     } catch (err: any) {
       setError(err.message);
+    }
+  };
+
+  // جلب التصنيفات الفرعية وربطها بالفئات
+  const fetchSubcategories = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('subcategories')
+        .select('id, name_ar, description_ar, category_id')
+        .order('name_ar');
+      if (error) throw error;
+      const mapped: Subcategory[] = (data || []).map((sc: any) => ({
+        id: sc.id,
+        name: sc.name_ar ?? '',
+        description: sc.description_ar ?? null,
+        category_id: sc.category_id,
+      }));
+      setSubcategories(mapped);
+    } catch (err: any) {
+      // لا توقف الصفحة بسبب خطأ فرعي
+      console.error('Failed to fetch subcategories', err);
     }
   };
 
@@ -146,7 +171,10 @@ export default function Services() {
             {categories.map((category, idx) => (
               <motion.button
                 key={category.id}
-                onClick={() => setSelectedCategory(category.id)}
+                onClick={() => {
+                  setSelectedCategory(category.id);
+                  setOpenCategoryId(prev => (prev === category.id ? null : category.id));
+                }}
                 className={`p-4 rounded-xl transition-all duration-300 ${
                   category.id === selectedCategory
                     ? `bg-[var(--color-secondary,#34C759)] text-black font-bold shadow-md`
@@ -166,11 +194,50 @@ export default function Services() {
           </AnimatePresence>
         </motion.div>
 
+        {/* التصنيفات الفرعية عند اختيار قسم رئيسي */}
+        {openCategoryId && (
+          <motion.div
+            className="mb-10"
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.2 }}
+          >
+            <div className="flex flex-wrap gap-2">
+              {subcategories.filter(sc => sc.category_id === openCategoryId).length === 0 ? (
+                <span className="text-gray-300 text-sm">لا توجد أقسام فرعية لهذا القسم.</span>
+              ) : (
+                subcategories
+                  .filter(sc => sc.category_id === openCategoryId)
+                  .map(sc => (
+                    <Link
+                      key={sc.id}
+                      to={`/subcategory/${sc.id}`}
+                      className="px-3 py-1.5 rounded-full text-sm bg-black/30 text-white border border-white/10 hover:bg-black/40"
+                    >
+                      {sc.name}
+                    </Link>
+                  ))
+              )}
+            </div>
+          </motion.div>
+        )}
+
         {/* الخدمات */}
         <motion.div
-  className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
-  initial="hidden"
-  animate="visible"
+          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
+          initial="hidden"
+          animate="visible"
+          variants={{
+            hidden: { opacity: 0, y: 50 }, // Starts invisible and 50px below its final position
+            visible: {
+              opacity: 1,
+              y: 0, // Slides to its final position
+              transition: {
+                staggerChildren: 0.1,
+                // You can also add a transition for the individual child here if needed
+              }
+            }
+          }}
   variants={{
     hidden: { opacity: 0, y: 50 }, // Starts invisible and 50px below its final position
     visible: {

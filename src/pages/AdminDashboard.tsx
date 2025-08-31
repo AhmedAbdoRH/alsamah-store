@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
-import type { Category, Service, Banner, StoreSettings, Testimonial } from '../types/database'; // Added Testimonial type
+import type { Category, Service, Banner, StoreSettings, Testimonial, Subcategory } from '../types/database'; // Added Subcategory type
 import { Trash2, Edit, Plus, Save, X, Upload, ChevronDown, ChevronUp, Facebook, Instagram, Twitter, Palette, Store, Image, List, Package } from 'lucide-react';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -22,6 +22,7 @@ interface AdminDashboardProps {
 export default function AdminDashboard({ onSettingsUpdate }: AdminDashboardProps) {
   const [categories, setCategories] = useState<Category[]>([]);
   const [services, setServices] = useState<Service[]>([]);
+  const [subcategories, setSubcategories] = useState<Subcategory[]>([]);
   const [banners, setBanners] = useState<Banner[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string>('');
   const [isLoading, setIsLoading] = useState(true);
@@ -33,7 +34,7 @@ export default function AdminDashboard({ onSettingsUpdate }: AdminDashboardProps
   const [logoUrl, setLogoUrl] = useState<string | null>(null);
   const [editingCategory, setEditingCategory] = useState<string | null>(null);
   const [editingBanner, setEditingBanner] = useState<string | null>(null);
-  const [deleteModal, setDeleteModal] = useState<{ id: string; type: 'category' | 'service' | 'banner' } | null>(null);
+  const [deleteModal, setDeleteModal] = useState<{ id: string; type: 'category' | 'service' | 'banner' | 'subcategory' } | null>(null);
   const [activeTab, setActiveTab] = useState<'products' | 'banners' | 'testimonials' | 'store'>('products');
 
   // Testimonials state
@@ -44,10 +45,11 @@ export default function AdminDashboard({ onSettingsUpdate }: AdminDashboardProps
   });
   const [editingTestimonial, setEditingTestimonial] = useState<string | null>(null);
   const [uploadingTestimonialImage, setUploadingTestimonialImage] = useState(false);
-  const [productsSubTab, setProductsSubTab] = useState<'services' | 'categories'>('services');
+  const [productsSubTab, setProductsSubTab] = useState<'services' | 'categories' | 'subcategories'>('services');
   const [bannersSubTab, setBannersSubTab] = useState<'text' | 'image'>('image');
 
   const [newCategory, setNewCategory] = useState({ name: '', description: '' });
+  const [newSubcategory, setNewSubcategory] = useState({ category_id: '', name_ar: '', description_ar: '' });
   const [newService, setNewService] = useState({
     title: '',
     description: '',
@@ -58,8 +60,9 @@ export default function AdminDashboard({ onSettingsUpdate }: AdminDashboardProps
     gallery: [] as string[],
     is_featured: false,
     is_best_seller: false,
-    remove_background: false,
   });
+  const [editingSubcategory, setEditingSubcategory] = useState<string | null>(null);
+  const [selectedSubcategory, setSelectedSubcategory] = useState<string>('');
   const [newBanner, setNewBanner] = useState<Partial<Banner>>({
     type: 'text',
     title: '',
@@ -170,6 +173,13 @@ export default function AdminDashboard({ onSettingsUpdate }: AdminDashboardProps
       if (servicesError) throw servicesError;
       setServices(servicesData || []);
 
+      const { data: subcatsData, error: subcatsError } = await supabase
+        .from('subcategories')
+        .select('*')
+        .order('created_at', { ascending: false });
+      if (subcatsError) throw subcatsError;
+      setSubcategories(subcatsData || []);
+
       const { data: bannersData, error: bannersError } = await supabase
         .from('banners')
         .select('*')
@@ -180,6 +190,7 @@ export default function AdminDashboard({ onSettingsUpdate }: AdminDashboardProps
       setError(`خطأ في جلب البيانات: ${err.message}`);
       setCategories([]);
       setServices([]);
+      setSubcategories([]);
       setBanners([]);
     } finally {
       setIsLoading(false);
@@ -354,19 +365,6 @@ export default function AdminDashboard({ onSettingsUpdate }: AdminDashboardProps
 
       const { data: { publicUrl } } = supabase.storage.from('services').getPublicUrl(filePath);
 
-      let processedFile = file; // Initialize with the original file
-
-      // If background removal is requested, process the image first
-      if (type === 'service' && newService.remove_background) {
-        try {
-          const blob = await removeBackground(file);
-          const newFileName = `removed_bg_${Date.now()}.png`;
-          processedFile = new File([blob], newFileName, { type: 'image/png' });
-        } catch (error) {
-          toast.error("فشل في إزالة الخلفية قبل الرفع.");
-          // Continue with original file if background removal fails
-        }
-      }
       if (type === 'logo') {
         setLogoUrl(publicUrl);
         setStoreSettings(prev => ({ ...prev, logo_url: publicUrl }));
@@ -456,22 +454,6 @@ export default function AdminDashboard({ onSettingsUpdate }: AdminDashboardProps
       
       let fileToUpload = await resizeImageIfNeeded(file, 2); // This will be the file we eventually upload
 
-      // If background removal is requested (only for services)
-      if (type === 'service' && newService.remove_background) {
-        console.log('newService.remove_background is true');
-        console.log('newService.remove_background is true');
-        try {
-          const blob = await removeBackground(fileToUpload); // Use the resized file for background removal
-          console.log('Blob from removeBackground:', blob);
-          const newFileName = `removed_bg_${Date.now()}.png`;
-          fileToUpload = new File([blob], newFileName, { type: 'image/png' }); // Update fileToUpload with the background-removed image
-          setSuccessMsg("تمت إزالة الخلفية بنجاح!"); // Message for successful background removal
-        } catch (error) {
-          toast.error("فشل في إزالة الخلفية. سيتم رفع الصورة الأصلية.");
-          // Continue with original fileToUpload if background removal fails
-        }
-      }
-
       const fileExt = fileToUpload.name.split('.').pop();
       const fileName = `${Date.now()}_${Math.random().toString(36).substring(2)}.${fileExt}`;
       const filePath = `${fileName}`;
@@ -493,22 +475,7 @@ export default function AdminDashboard({ onSettingsUpdate }: AdminDashboardProps
     }
   };
 
-  const handleRemoveBackground = async (imageFile: File) => {
-    try {
-      const blob = await removeBackground(imageFile);
-      return new Promise((resolve) => {
-        const reader = new FileReader();
-        reader.onloadend = () => {
-          const base64data = reader.result?.toString().split(',')[1];
-          resolve(base64data || null);
-        };
-        reader.readAsDataURL(blob);
-      });
-    } catch (error: any) {
-      toast.error(`فشل في إزالة الخلفية: ${error.message}`);
-      return null;
-    }
-  };
+  
 
   const handleAddCategory = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -585,6 +552,10 @@ export default function AdminDashboard({ onSettingsUpdate }: AdminDashboardProps
       } else if (deleteModal.type === 'banner') {
         await supabase.from('banners').delete().eq('id', deleteModal.id);
         message = "تم حذف البانر بنجاح.";
+      } else if (deleteModal.type === 'subcategory') {
+        await supabase.from('services').update({ subcategory_id: null }).eq('subcategory_id', deleteModal.id);
+        await supabase.from('subcategories').delete().eq('id', deleteModal.id);
+        message = "تم حذف التصنيف الفرعي بنجاح.";
       }
 
       setDeleteModal(null);
@@ -600,6 +571,7 @@ export default function AdminDashboard({ onSettingsUpdate }: AdminDashboardProps
   const handleDeleteCategory = (id: string) => setDeleteModal({ id, type: 'category' });
   const handleDeleteService = (id: string) => setDeleteModal({ id, type: 'service' });
   const handleDeleteBanner = (id: string) => setDeleteModal({ id, type: 'banner' });
+  const handleDeleteSubcategory = (id: string) => setDeleteModal({ id, type: 'subcategory' });
   
   const handleAddService = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -612,6 +584,7 @@ export default function AdminDashboard({ onSettingsUpdate }: AdminDashboardProps
         const serviceToAdd = {
             ...newService,
             category_id: selectedCategory,
+            subcategory_id: selectedSubcategory || null,
             sale_price: newService.sale_price || null,
             is_featured: newService.is_featured || false,
             is_best_seller: newService.is_best_seller || false
@@ -631,9 +604,9 @@ export default function AdminDashboard({ onSettingsUpdate }: AdminDashboardProps
             gallery: [],
             is_featured: false,
             is_best_seller: false,
-            remove_background: false,
         });
         setSelectedCategory('');
+        setSelectedSubcategory('');
         await fetchData();
         setSuccessMsg('تمت إضافة المنتج بنجاح');
     } catch (err: any) {
@@ -656,9 +629,11 @@ export default function AdminDashboard({ onSettingsUpdate }: AdminDashboardProps
       gallery: Array.isArray(service.gallery) ? service.gallery : [],
       is_featured: service.is_featured || false,
       is_best_seller: service.is_best_seller || false,
-      remove_background: false, // Reset this on edit
     });
+
     setSelectedCategory(service.category_id || '');
+    // @ts-ignore - subcategory_id may exist in DB even if not in Service type
+    setSelectedSubcategory((service as any).subcategory_id || '');
     const formElement = document.getElementById('service-form');
     formElement?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
@@ -678,6 +653,7 @@ export default function AdminDashboard({ onSettingsUpdate }: AdminDashboardProps
         price: newService.price,
         sale_price: newService.sale_price || null,
         category_id: selectedCategory,
+        subcategory_id: selectedSubcategory || null,
         gallery: Array.isArray(newService.gallery) ? newService.gallery : [],
         is_featured: newService.is_featured || false,
         is_best_seller: newService.is_best_seller || false
@@ -697,10 +673,10 @@ export default function AdminDashboard({ onSettingsUpdate }: AdminDashboardProps
         category_id: '', 
         gallery: [],
         is_featured: false,
-        is_best_seller: false,
-        remove_background: false
+        is_best_seller: false
       });
       setSelectedCategory('');
+      setSelectedSubcategory('');
       setEditingService(null);
       await fetchData();
       setSuccessMsg("تم تحديث المنتج بنجاح!");
@@ -722,10 +698,79 @@ export default function AdminDashboard({ onSettingsUpdate }: AdminDashboardProps
       category_id: '', 
       gallery: [],
       is_featured: false,
-      is_best_seller: false,
-      remove_background: false
+      is_best_seller: false
     });
     setSelectedCategory('');
+    setSelectedSubcategory('');
+  };
+
+  // Subcategories CRUD
+  const handleAddSubcategory = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newSubcategory.category_id || !newSubcategory.name_ar.trim()) {
+      setError('يجب اختيار قسم وكتابة اسم للتصنيف الفرعي');
+      return;
+    }
+    setIsLoading(true);
+    try {
+      const { error } = await supabase.from('subcategories').insert([{
+        category_id: newSubcategory.category_id,
+        name_ar: newSubcategory.name_ar,
+        description_ar: newSubcategory.description_ar || null,
+      }]);
+      if (error) throw error;
+      setNewSubcategory({ category_id: '', name_ar: '', description_ar: '' });
+      await fetchData();
+      setSuccessMsg('تم إضافة التصنيف الفرعي بنجاح');
+    } catch (err: any) {
+      setError(`خطأ في إضافة التصنيف الفرعي: ${err.message}`);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleEditSubcategory = (subcat: Subcategory) => {
+    setEditingSubcategory(subcat.id);
+    setNewSubcategory({
+      category_id: subcat.category_id,
+      name_ar: (subcat as any).name_ar || (subcat as any).name || '',
+      description_ar: (subcat as any).description_ar || (subcat as any).description || '',
+    });
+    const formElement = document.getElementById('subcategory-form');
+    formElement?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
+
+  const handleUpdateSubcategory = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingSubcategory || !newSubcategory.category_id || !newSubcategory.name_ar.trim()) {
+      setError('يجب اختيار قسم وكتابة اسم للتصنيف الفرعي');
+      return;
+    }
+    setIsLoading(true);
+    try {
+      const { error } = await supabase
+        .from('subcategories')
+        .update({
+          category_id: newSubcategory.category_id,
+          name_ar: newSubcategory.name_ar,
+          description_ar: newSubcategory.description_ar || null,
+        })
+        .eq('id', editingSubcategory);
+      if (error) throw error;
+      setNewSubcategory({ category_id: '', name_ar: '', description_ar: '' });
+      setEditingSubcategory(null);
+      await fetchData();
+      setSuccessMsg('تم تحديث التصنيف الفرعي بنجاح');
+    } catch (err: any) {
+      setError(`خطأ في تحديث التصنيف الفرعي: ${err.message}`);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleCancelEditSubcategory = () => {
+    setEditingSubcategory(null);
+    setNewSubcategory({ category_id: '', name_ar: '', description_ar: '' });
   };
 
   const handleAddBanner = async (e: React.FormEvent) => {
@@ -1338,6 +1383,7 @@ export default function AdminDashboard({ onSettingsUpdate }: AdminDashboardProps
                   <div className="flex border-b border-gray-700 mb-6">
                     <button onClick={() => setProductsSubTab('services')} className={`flex-1 py-2 font-bold transition-colors rounded-t-md ${productsSubTab === 'services' ? 'bg-blue-600 text-white' : 'text-gray-400 hover:bg-gray-700'}`}>المنتجات</button>
                     <button onClick={() => setProductsSubTab('categories')} className={`flex-1 py-2 font-bold transition-colors rounded-t-md ${productsSubTab === 'categories' ? 'bg-blue-600 text-white' : 'text-gray-400 hover:bg-gray-700'}`}>الأقسام</button>
+                    <button onClick={() => setProductsSubTab('subcategories')} className={`flex-1 py-2 font-bold transition-colors rounded-t-md ${productsSubTab === 'subcategories' ? 'bg-blue-600 text-white' : 'text-gray-400 hover:bg-gray-700'}`}>التصنيفات الفرعية</button>
                   </div>
 
                   {productsSubTab === 'services' && (
@@ -1363,10 +1409,21 @@ export default function AdminDashboard({ onSettingsUpdate }: AdminDashboardProps
                           </div>
                         )}
                         
-                        <select value={selectedCategory} onChange={(e) => setSelectedCategory(e.target.value)} className="w-full p-3 rounded text-white bg-gray-700 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none" required disabled={isLoading || categories.length === 0}>
+                        <select value={selectedCategory} onChange={(e) => { setSelectedCategory(e.target.value); setSelectedSubcategory(''); }} className="w-full p-3 rounded text-white bg-gray-700 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none" required disabled={isLoading || categories.length === 0}>
                           <option value="" disabled className="text-gray-400">-- اختر القسم --</option>
                           {categories.map((category) => (<option key={category.id} value={category.id} className="bg-gray-800 text-white">{category.name}</option>))}
                           {categories.length === 0 && <option disabled>لا توجد أقسام، يرجى إضافة قسم أولاً.</option>}
+                        </select>
+                        <select value={selectedSubcategory} onChange={(e) => setSelectedSubcategory(e.target.value)} className="w-full p-3 rounded text-white bg-gray-700 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none" disabled={isLoading || !selectedCategory}>
+                          <option value="" className="text-gray-400">-- اختر التصنيف الفرعي (اختياري) --</option>
+                          {subcategories
+                            .filter(sc => sc.category_id === selectedCategory)
+                            .map((sc) => (
+                              <option key={sc.id} value={sc.id} className="bg-gray-800 text-white">{(sc as any).name_ar || (sc as any).name}</option>
+                            ))}
+                          {selectedCategory && subcategories.filter(sc => sc.category_id === selectedCategory).length === 0 && (
+                            <option disabled>لا توجد تصنيفات فرعية لهذا القسم</option>
+                          )}
                         </select>
                         
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -1374,7 +1431,7 @@ export default function AdminDashboard({ onSettingsUpdate }: AdminDashboardProps
                           <input type="text" placeholder="سعر التخفيض (اختياري)" value={newService.sale_price} onChange={(e) => setNewService({ ...newService, sale_price: e.target.value })} className="w-full p-3 rounded text-white bg-gray-700 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500" disabled={isLoading}/>
                         </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                             <div className="flex items-center gap-2 p-2 bg-gray-700/50 rounded-md">
                                 <input type="checkbox" id="is_featured" checked={newService.is_featured || false} onChange={(e) => setNewService({ ...newService, is_featured: e.target.checked })} className="h-4 w-4 accent-blue-500"/>
                                 <label htmlFor="is_featured" className="text-white">أحدث العروض</label>
@@ -1382,10 +1439,6 @@ export default function AdminDashboard({ onSettingsUpdate }: AdminDashboardProps
                             <div className="flex items-center gap-2 p-2 bg-gray-700/50 rounded-md">
                                 <input type="checkbox" id="is_best_seller" checked={newService.is_best_seller || false} onChange={(e) => setNewService({ ...newService, is_best_seller: e.target.checked })} className="h-4 w-4 accent-blue-500"/>
                                 <label htmlFor="is_best_seller" className="text-white">الأكثر مبيعًا</label>
-                            </div>
-                            <div className="flex items-center gap-2 p-2 bg-gray-700/50 rounded-md">
-                                <input type="checkbox" id="remove_background" checked={newService.remove_background || false} onChange={(e) => setNewService({ ...newService, remove_background: e.target.checked })} className="h-4 w-4 accent-blue-500"/>
-                                <label htmlFor="remove_background" className="text-white">إزالة الخلفية (AI)</label>
                             </div>
                         </div>
 
@@ -1449,6 +1502,102 @@ export default function AdminDashboard({ onSettingsUpdate }: AdminDashboardProps
                     </>
                   )}
 
+                  {productsSubTab === 'subcategories' && (
+                    <>
+                      {/* Subcategory create/edit form */}
+                      <form onSubmit={editingSubcategory ? handleUpdateSubcategory : handleAddSubcategory} className="mb-8 space-y-4" id="subcategory-form">
+                        <select
+                          value={newSubcategory.category_id}
+                          onChange={(e) => setNewSubcategory({ ...newSubcategory, category_id: e.target.value })}
+                          className="w-full p-3 rounded text-white bg-gray-700 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none"
+                          required
+                          disabled={isLoading || categories.length === 0}
+                        >
+                          <option value="" disabled className="text-gray-400">-- اختر القسم --</option>
+                          {categories.map((category) => (
+                            <option key={category.id} value={category.id} className="bg-gray-800 text-white">{category.name}</option>
+                          ))}
+                        </select>
+                        <input
+                          type="text"
+                          placeholder="اسم التصنيف الفرعي (عربي)"
+                          value={newSubcategory.name_ar}
+                          onChange={(e) => setNewSubcategory({ ...newSubcategory, name_ar: e.target.value })}
+                          className="w-full p-3 rounded text-white bg-gray-700 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          required
+                          disabled={isLoading}
+                        />
+                        <textarea
+                          placeholder="وصف التصنيف الفرعي (اختياري)"
+                          value={newSubcategory.description_ar}
+                          onChange={(e) => setNewSubcategory({ ...newSubcategory, description_ar: e.target.value })}
+                          rows={3}
+                          className="w-full p-3 rounded text-white bg-gray-700 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          disabled={isLoading}
+                        />
+                        <div className="flex gap-3">
+                          <button
+                            type="submit"
+                            className="flex-grow bg-blue-600 text-white py-2.5 px-4 rounded-md font-bold hover:bg-blue-700 flex items-center justify-center gap-2 disabled:opacity-50"
+                            disabled={isLoading}
+                          >
+                            {editingSubcategory ? <><Save size={20} /> حفظ التعديلات</> : <><Plus size={20} /> إضافة تصنيف فرعي</>}
+                          </button>
+                          {editingSubcategory && (
+                            <button
+                              type="button"
+                              onClick={handleCancelEditSubcategory}
+                              className="bg-gray-600 text-white px-4 py-2.5 rounded-md hover:bg-gray-700 flex items-center justify-center gap-2 font-bold"
+                              disabled={isLoading}
+                            >
+                              <X size={20} /> إلغاء
+                            </button>
+                          )}
+                        </div>
+                      </form>
+
+                      {/* Subcategories list */}
+                      <h3 className="text-lg font-semibold mb-4 text-white border-b border-gray-600 pb-2">التصنيفات الفرعية الحالية</h3>
+                      <div className="space-y-3">
+                        {subcategories.map((sc) => (
+                          <div
+                            key={sc.id}
+                            className={`p-4 rounded-md bg-gray-900/50 border border-gray-700 flex justify-between items-center transition-all ${editingSubcategory === sc.id ? 'ring-2 ring-blue-500' : ''}`}
+                          >
+                            <div className="flex-1 overflow-hidden">
+                              <h4 className="font-bold text-white text-lg truncate">{(sc as any).name_ar || (sc as any).name}</h4>
+                              <div className="text-xs text-gray-400 mb-1">القسم: {categories.find(c => c.id === sc.category_id)?.name || 'غير محدد'}</div>
+                              {(sc as any).description_ar && (
+                                <p className="text-gray-400 text-sm mt-1 line-clamp-2">{(sc as any).description_ar}</p>
+                              )}
+                            </div>
+                            <div className="flex gap-2">
+                              <button
+                                onClick={() => !isLoading && handleEditSubcategory(sc)}
+                                title="تعديل"
+                                className="text-blue-400 hover:text-blue-300 p-2 disabled:opacity-50"
+                                disabled={editingSubcategory === sc.id || isLoading}
+                              >
+                                <Edit size={18} />
+                              </button>
+                              <button
+                                onClick={() => !isLoading && handleDeleteSubcategory(sc.id)}
+                                title="حذف"
+                                className="text-red-500 hover:text-red-400 p-2 disabled:opacity-50"
+                                disabled={isLoading}
+                              >
+                                <Trash2 size={18} />
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+                        {!isLoading && subcategories.length === 0 && (
+                          <div className="text-gray-400 text-center py-6">لا توجد تصنيفات فرعية بعد.</div>
+                        )}
+                      </div>
+                    </>
+                  )}
+
                   {productsSubTab === 'categories' && (
                     <>
                       <form onSubmit={editingCategory ? handleUpdateCategory : handleAddCategory} className="mb-8 space-y-4" id="category-form">
@@ -1475,8 +1624,20 @@ export default function AdminDashboard({ onSettingsUpdate }: AdminDashboardProps
                               {category.description && <p className="text-gray-400 text-sm mt-1 line-clamp-2">{category.description}</p>}
                             </div>
                             <div className="flex gap-2">
-                                <button onClick={() => !isLoading && handleEditCategory(category)} title="تعديل" className="text-blue-400 hover:text-blue-300 p-2 disabled:opacity-50" disabled={editingCategory === category.id || isLoading}><Edit size={18} /></button>
-                                <button onClick={() => !isLoading && handleDeleteCategory(category.id)} title="حذف" className="text-red-500 hover:text-red-400 p-2 disabled:opacity-50" disabled={isLoading}><Trash2 size={18} /></button>
+                              <button onClick={() => !isLoading && handleEditCategory(category)} title="تعديل" className="text-blue-400 hover:text-blue-300 p-2 disabled:opacity-50" disabled={editingCategory === category.id || isLoading}><Edit size={18} /></button>
+                              <button onClick={() => !isLoading && handleDeleteCategory(category.id)} title="حذف" className="text-red-500 hover:text-red-400 p-2 disabled:opacity-50" disabled={isLoading}><Trash2 size={18} /></button>
+                              <button
+                                onClick={() => {
+                                  if (isLoading) return;
+                                  setProductsSubTab('subcategories');
+                                  setNewSubcategory({ ...newSubcategory, category_id: category.id });
+                                }}
+                                title="إضافة تصنيف فرعي لهذا القسم"
+                                className="text-green-400 hover:text-green-300 p-2 disabled:opacity-50"
+                                disabled={isLoading}
+                              >
+                                <Plus size={18} />
+                              </button>
                             </div>
                           </div>
                         ))}

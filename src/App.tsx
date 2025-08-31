@@ -14,6 +14,7 @@ import AdminLogin from './pages/AdminLogin';
 import AdminDashboard from './pages/AdminDashboard';
 import ServiceDetails from './pages/ServiceDetails';
 import CategoryProducts from './pages/CategoryProducts';
+import SubcategoryProducts from './pages/SubcategoryProducts';
 import ProductDetails from './pages/ProductDetails';
 import LoadingScreen from './components/LoadingScreen';
 import type { StoreSettings, Banner } from './types/database';
@@ -271,6 +272,11 @@ function App() {
             <Route path="/category/:categoryId" element={
               <Layout banners={banners}>
                 <CategoryProducts />
+              </Layout>
+            } />
+            <Route path="/subcategory/:subcategoryId" element={
+              <Layout banners={banners}>
+                <SubcategoryProducts />
               </Layout>
             } />
             <Route path="/" element={

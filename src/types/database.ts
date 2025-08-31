@@ -69,3 +69,12 @@ export interface Testimonial {
   is_active: boolean;
   created_at: string;
 }
+
+// Subcategory type used in the frontend
+export interface Subcategory {
+  id: string;
+  name: string; // mapped in UI from name_ar
+  description: string | null; // mapped from description_ar
+  category_id: string;
+  created_at?: string;
+}
