@@ -56,7 +56,7 @@ export default function AIChatBot() {
     const [messages, setMessages] = useState<Message[]>([
         {
             id: '1',
-            text: 'أهلاً بيك في سفير العطور 🌹\nازاي أقدر أساعدك؟',
+            text: 'أهلاً بيك في سفير المنتجات 🌹\nازاي أقدر أساعدك؟',
             isUser: false,
             timestamp: new Date()
         }
@@ -101,7 +101,7 @@ export default function AIChatBot() {
 
     const generateStoreContext = () => {
         const { products, storeSettings } = storeData;
-        let context = `أنت مساعد ذكي لمتجر "${storeSettings?.store_name || 'سفير العطور'}".\n\n`;
+        let context = `أنت مساعد ذكي لمتجر "${storeSettings?.store_name || 'سفير المنتجات'}".\n\n`;
 
         if (products.length > 0) {
             context += `المنتجات المتاحة في المتجر:\n`;
@@ -259,7 +259,7 @@ export default function AIChatBot() {
                             <div className="flex items-center gap-3">
                                 <div className="w-8 h-8 bg-gradient-to-r from-green-500 to-emerald-500 rounded-full flex items-center justify-center"><Bot className="h-4 w-4 text-white" /></div>
                                 <div>
-                                    <h3 className="text-white font-semibold text-sm">مساعد {storeData.storeSettings?.store_name || 'سفير العطور'}</h3>
+                                    <h3 className="text-white font-semibold text-sm">مساعد {storeData.storeSettings?.store_name || 'سفير المنتجات'}</h3>
                                     <p className="text-green-400 text-xs">متصل الآن</p>
                                 </div>
                             </div>

@@ -133,11 +133,11 @@ function App() {
         // Set default settings if fetch fails
         setStoreSettings({
           id: '00000000-0000-0000-0000-000000000001',
-          store_name: 'متجر العطور',
-          store_description: 'أفضل العطور والمنتجات العالمية',
+          store_name: 'متجر المنتجات',
+          store_description: 'أفضل المنتجات العالمية',
           logo_url: '/logo.png',
-          meta_title: 'متجر العطور',
-          meta_description: 'أفضل العطور والمنتجات العالمية',
+          meta_title: 'متجر المنتجات',
+          meta_description: 'أفضل المنتجات العالمية',
           theme_settings: {
             primaryColor: '#c7a17a',
             secondaryColor: '#fff',
@@ -155,11 +155,11 @@ function App() {
         // No data found, set default settings
         setStoreSettings({
           id: '00000000-0000-0000-0000-000000000001',
-          store_name: 'متجر العطور',
-          store_description: 'أفضل العطور والمنتجات العالمية',
+          store_name: 'متجر المنتجات',
+          store_description: 'أفضل المنتجات العالمية',
           logo_url: '/logo.png',
-          meta_title: 'متجر العطور',
-          meta_description: 'أفضل العطور والمنتجات العالمية',
+          meta_title: 'متجر المنتجات',
+          meta_description: 'أفضل المنتجات العالمية',
           theme_settings: {
             primaryColor: '#c7a17a',
             secondaryColor: '#fff',
@@ -174,11 +174,11 @@ function App() {
       // Set default settings on any unexpected error
       setStoreSettings({
         id: '00000000-0000-0000-0000-000000000001',
-        store_name: 'متجر العطور',
-        store_description: 'أفضل العطور والمنتجات العالمية',
+        store_name: 'متجر المنتجات',
+        store_description: 'أفضل المنتجات العالمية',
         logo_url: '/logo.png',
-        meta_title: 'متجر العطور',
-        meta_description: 'أفضل العطور والمنتجات العالمية',
+        meta_title: 'متجر المنتجات',
+        meta_description: 'أفضل المنتجات العالمية',
         theme_settings: {
           primaryColor: '#c7a17a',
           secondaryColor: '#fff',
@@ -226,7 +226,7 @@ function App() {
     return (
       <LoadingScreen
         logoUrl={storeSettings?.logo_url || '/logo.png'} // Provide a default logo
-        storeName={storeSettings?.store_name || 'متجر العطور'}
+        storeName={storeSettings?.store_name || 'متجر المنتجات'}
       />
     );
   }

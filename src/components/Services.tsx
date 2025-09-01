@@ -14,6 +14,7 @@ export default function Services() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [subcategories, setSubcategories] = useState<Subcategory[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string | 'featured' | 'best_sellers' | null>(null);
+  const [selectedSubcategory, setSelectedSubcategory] = useState<string | null>(null);
   const [openCategoryId, setOpenCategoryId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -45,7 +46,7 @@ export default function Services() {
       setIsLoading(true);
       setError(null);
 
-      // Fetch all services with their categories
+      // Fetch all services with their categories and subcategories
       const { data, error } = await supabase
         .from('services')
         .select(`
@@ -91,18 +92,38 @@ export default function Services() {
   };
 
   const filteredServices = useCallback((): Service[] => {
-    if (!selectedCategory) return services;
+    let filtered = services;
     
-    if (selectedCategory === 'featured') {
-      return services.filter(service => service.is_featured === true);
+    // Filter by category first
+    if (selectedCategory && selectedCategory !== 'featured' && selectedCategory !== 'best_sellers') {
+      filtered = filtered.filter(service => service.category_id === selectedCategory);
+    } else if (selectedCategory === 'featured') {
+      filtered = filtered.filter(service => service.is_featured === true);
+    } else if (selectedCategory === 'best_sellers') {
+      filtered = filtered.filter(service => service.is_best_seller === true);
     }
     
-    if (selectedCategory === 'best_sellers') {
-      return services.filter(service => service.is_best_seller === true);
+    // Then filter by subcategory if selected
+    // Note: Currently subcategory filtering is disabled as subcategory_id is not available in Service type
+    // You may need to update the database schema or Service type to include subcategory_id
+    if (selectedSubcategory) {
+      // For now, we'll show all products in the category when a subcategory is selected
+      // This can be updated once the database relationship is properly set up
+      console.log('Subcategory filtering is not yet implemented');
     }
     
-    return services.filter(service => service.category_id === selectedCategory);
-  }, [selectedCategory, services]);
+    return filtered;
+  }, [selectedCategory, selectedSubcategory, services]);
+
+  const handleCategoryClick = (categoryId: string) => {
+    setSelectedCategory(categoryId);
+    setSelectedSubcategory(null); // Reset subcategory selection
+    setOpenCategoryId(prev => (prev === categoryId ? null : categoryId));
+  };
+
+  const handleSubcategoryClick = (subcategoryId: string | null) => {
+    setSelectedSubcategory(subcategoryId);
+  };
 
   if (isLoading) {
     return (
@@ -117,7 +138,7 @@ export default function Services() {
     return (
       <div className={`py-16 bg-gradient-to-br from-[${brownDark}] to-black`}>
         <div className="container mx-auto px-4 text-center text-red-600">
-          حدث خطأ أثناء تحميل العطور: {error}
+          حدث خطأ أثناء تحميل المنتجات: {error}
         </div>
       </div>
     );
@@ -137,7 +158,7 @@ export default function Services() {
         {/* العنوان */}
         <motion.h2
           className={`text-3xl font-bold text-center mb-12 text-[${lightGold}]`}
-           variants={{
+          variants={{
             hidden: { opacity: 0, y: -30 },
             visible: { opacity: 1, y: 0 },
           }}
@@ -145,6 +166,7 @@ export default function Services() {
         >
           منتجاتنا
         </motion.h2>
+
         {/* Special Categories */}
         <motion.div
           className="flex flex-wrap gap-4 justify-center mb-6"
@@ -155,7 +177,11 @@ export default function Services() {
         >
           {/* All Products Button */}
           <motion.button
-            onClick={() => setSelectedCategory(null)}
+            onClick={() => {
+              setSelectedCategory(null);
+              setSelectedSubcategory(null);
+              setOpenCategoryId(null);
+            }}
             className={`p-4 rounded-xl transition-all duration-300 ${
               !selectedCategory
                 ? `bg-[var(--color-secondary,#34C759)] text-black font-bold shadow-md`
@@ -166,13 +192,17 @@ export default function Services() {
               visible: { opacity: 1, y: 0 },
             }}
           >
-            جميع العطور
+            جميع المنتجات
           </motion.button>
 
           {/* Featured Products Category */}
           {hasFeaturedProducts && (
             <motion.button
-              onClick={() => setSelectedCategory('featured')}
+              onClick={() => {
+                setSelectedCategory('featured');
+                setSelectedSubcategory(null);
+                setOpenCategoryId(null);
+              }}
               className={`p-4 rounded-xl transition-all duration-300 ${
                 selectedCategory === 'featured'
                   ? `bg-[var(--color-secondary,#FFD700)] text-black font-bold shadow-md`
@@ -192,7 +222,11 @@ export default function Services() {
           {/* Best Sellers Category */}
           {hasBestSellerProducts && (
             <motion.button
-              onClick={() => setSelectedCategory('best_sellers')}
+              onClick={() => {
+                setSelectedCategory('best_sellers');
+                setSelectedSubcategory(null);
+                setOpenCategoryId(null);
+              }}
               className={`p-4 rounded-xl transition-all duration-300 ${
                 selectedCategory === 'best_sellers'
                   ? `bg-[var(--color-secondary,#FF6B6B)] text-black font-bold shadow-md`
@@ -212,7 +246,7 @@ export default function Services() {
 
         {/* Regular Categories */}
         <motion.div
-          className="flex flex-wrap gap-4 justify-center mb-12"
+          className="flex flex-wrap gap-4 justify-center mb-8"
           variants={{
             hidden: { opacity: 0 },
             visible: { opacity: 1, transition: { staggerChildren: 0.1 } },
@@ -222,10 +256,7 @@ export default function Services() {
             {categories.map((category) => (
               <motion.button
                 key={category.id}
-                onClick={() => {
-                  setSelectedCategory(category.id);
-                  setOpenCategoryId(prev => (prev === category.id ? null : category.id));
-                }}
+                onClick={() => handleCategoryClick(category.id)}
                 className={`p-4 rounded-xl transition-all duration-300 ${
                   category.id === selectedCategory
                     ? `bg-[var(--color-secondary,#34C759)] text-black font-bold shadow-md`
@@ -242,30 +273,61 @@ export default function Services() {
           </AnimatePresence>
         </motion.div>
 
-        {/* التصنيفات الفرعية تحت القسم المحدد */}
+        {/* Subcategories Section */}
         {openCategoryId && (
           <motion.div
             className="mb-8"
-            initial={{ opacity: 0, y: -8 }}
+            initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.2 }}
+            transition={{ duration: 0.3 }}
           >
-            <div className="flex flex-wrap gap-2 justify-center">
-              {subcategories.filter(sc => sc.category_id === openCategoryId).length === 0 ? (
-                <span className="text-gray-300 text-sm">لا توجد أقسام فرعية لهذا القسم.</span>
-              ) : (
-                subcategories
+            <div className="text-center mb-6">
+              <h4 className="text-white text-xl font-bold mb-3">الأقسام الفرعية</h4>
+              <div className="w-20 h-1 bg-gradient-to-r from-[var(--color-secondary,#34C759)] to-[var(--color-accent,#FFD700)] mx-auto rounded-full shadow-lg"></div>
+            </div>
+            
+            <div className="flex flex-wrap gap-4 justify-center">
+              {/* زر الكل */}
+              <motion.button
+                onClick={() => handleSubcategoryClick(null)}
+                className={`px-8 py-4 rounded-full text-base font-semibold transition-all duration-300 transform hover:scale-105 ${
+                  selectedSubcategory === null
+                    ? 'bg-gradient-to-r from-[var(--color-secondary,#34C759)] to-[var(--color-accent,#FFD700)] text-black shadow-xl'
+                    : 'bg-white/10 text-white border-2 border-white/20 hover:bg-white/20 hover:border-white/40 hover:shadow-lg'
+                }`}
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.2 }}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                الكل
+              </motion.button>
+              
+              {/* الأقسام الفرعية */}
+              <AnimatePresence>
+                {subcategories
                   .filter(sc => sc.category_id === openCategoryId)
-                  .map(sc => (
-                    <Link
-                      key={sc.id}
-                      to={`/subcategory/${sc.id}`}
-                      className="px-4 py-2 rounded-full text-base bg-white/70 text-black border border-white/80 shadow-sm hover:bg-white transition-colors"
-                    >
-                      {sc.name}
-                    </Link>
-                  ))
-              )}
+                  .map((subcategory, idx) => (
+                                         <motion.button
+                       key={subcategory.id}
+                       onClick={() => handleSubcategoryClick(subcategory.id)}
+                       className={`px-8 py-4 rounded-full text-base font-semibold transition-all duration-300 transform hover:scale-105 ${
+                         selectedSubcategory === subcategory.id
+                           ? 'bg-gradient-to-r from-[var(--color-secondary,#34C759)] to-[var(--color-accent,#FFD700)] text-black shadow-xl'
+                           : 'bg-white/10 text-white border-2 border-white/20 hover:bg-white/20 hover:border-white/40 hover:shadow-lg'
+                       }`}
+                       initial={{ opacity: 0, scale: 0.8 }}
+                       animate={{ opacity: 1, scale: 1 }}
+                       exit={{ opacity: 0, scale: 0.8 }}
+                       transition={{ duration: 0.2, delay: idx * 0.05 }}
+                       whileHover={{ scale: 1.05 }}
+                       whileTap={{ scale: 0.95 }}
+                     >
+                       {subcategory.name}
+                     </motion.button>
+                  ))}
+              </AnimatePresence>
             </div>
           </motion.div>
         )}
@@ -307,7 +369,7 @@ export default function Services() {
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 className="col-span-full text-center text-white text-xl"
-                 transition={{ duration: 0.5 }}
+                transition={{ duration: 0.5 }}
               >
                 لا توجد منتجات في هذه الفئة.
               </motion.div>
