@@ -9,7 +9,7 @@ CREATE TABLE IF NOT EXISTS subcategories (
     category_id UUID REFERENCES categories(id) ON DELETE CASCADE,
     image_url TEXT,
     is_active BOOLEAN DEFAULT true,
-    display_order INTEGER DEFAULT 0,
+    display_order INTEGER,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );

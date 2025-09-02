@@ -1762,7 +1762,7 @@ export default function AdminDashboard({ onSettingsUpdate }: AdminDashboardProps
                                 <input
                                   type="number"
                                   placeholder="السعر"
-                                  value={size.price}
+                                  value={size.price === 0 ? '' : size.price}
                                   onChange={(e) => {
                                     const newSizes = [...newService.sizes];
                                     newSizes[index].price = parseFloat(e.target.value);
@@ -1801,9 +1801,9 @@ export default function AdminDashboard({ onSettingsUpdate }: AdminDashboardProps
                                 const newSizes = [...(newService.sizes || []), { size: '', price: 0, sale_price: null }];
                                 setNewService({ ...newService, sizes: newSizes });
                               }}
-                              className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
+                              className="bg-blue-800 text-white px-4 py-2 rounded-md hover:bg-blue-700"
                             >
-                              إضافة مقاس
+                             + مقاس اضافي
                             </button>
                           </div>
                         ) : (
