@@ -1536,10 +1536,23 @@ export default function AdminDashboard({ onSettingsUpdate }: AdminDashboardProps
                     )}
                     {bannersSubTab === 'image' && (
                       <div>
+                        <div className="flex justify-start mb-2 gap-1">
+                          <a 
+                            id="canva-banner-button"
+                            href="https://www.canva.com/design/DAGxiEhNhbw/eXR_AZsWGumCY5a4NrCYiw/edit?utm_content=DAGxiEhNhbw&utm_campaign=designshare&utm_medium=link2&utm_source=sharebutton" 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="px-2 py-1 rounded-md text-xs font-medium bg-gradient-to-l from-blue-800 to-purple-800 text-white hover:from-blue-600 hover:to-purple-800 transition-all flex items-center gap-0.5"
+                            title="إنشاء / تعديل بانر باستخدام كانفا"
+                          >
+                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 19l7-7 3 3-7 7-3-3z"></path><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"></path><path d="M2 2l7.586 7.586"></path><circle cx="11" cy="11" r="2"></circle></svg>
+انشاء / تعديل بانر على كانفا                          </a>
+
+                        </div>
                         <label htmlFor="banner-image-upload" className={`w-full flex flex-col items-center justify-center p-4 rounded-md border-2 border-dashed border-gray-600 cursor-pointer hover:bg-gray-700/50 hover:border-blue-500 transition-colors ${uploadingBannerImage || isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}>
                             <Upload className={`w-8 h-8 mb-2 text-blue-400 ${uploadingBannerImage ? 'animate-pulse' : ''}`} />
                             <span className="text-white font-semibold">{uploadingBannerImage ? 'جاري رفع الصورة...' : (newBanner.image_url ? 'تغيير الصورة' : 'اختر صورة للبانر')}</span>
-                            <span className="text-xs text-gray-400 mt-1">المقاس الموصى به: 1920x500 بكسل</span>
+                            <span className="text-xs text-gray-500 mt-1">المقاس الموصى به: 1920x700 بكسل</span>
                         </label>
                          <input
                           type="file"
