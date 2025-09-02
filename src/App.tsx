@@ -133,11 +133,11 @@ function App() {
         // Set default settings if fetch fails
         setStoreSettings({
           id: '00000000-0000-0000-0000-000000000001',
-          store_name: 'متجر المنتجات',
-          store_description: 'أفضل المنتجات العالمية',
-          logo_url: '/logo.png',
-          meta_title: 'متجر المنتجات',
-          meta_description: 'أفضل المنتجات العالمية',
+          store_name: 'معرض السماح - فوربيد',
+          store_description: 'أفضل المفروشات والأثاث المنزلي',
+          logo_url: '/Logo.png',
+          meta_title: 'معرض السماح - فوربيد للمفروشات',
+          meta_description: 'أفضل المفروشات والأثاث المنزلي بأسعار تنافسية',
           theme_settings: {
             primaryColor: '#c7a17a',
             secondaryColor: '#fff',
@@ -155,11 +155,11 @@ function App() {
         // No data found, set default settings
         setStoreSettings({
           id: '00000000-0000-0000-0000-000000000001',
-          store_name: 'متجر المنتجات',
-          store_description: 'أفضل المنتجات العالمية',
-          logo_url: '/logo.png',
-          meta_title: 'متجر المنتجات',
-          meta_description: 'أفضل المنتجات العالمية',
+          store_name: 'معرض السماح - فوربيد',
+          store_description: 'أفضل المفروشات والأثاث المنزلي',
+          logo_url: '/Logo.png',
+          meta_title: 'معرض السماح - فوربيد للمفروشات',
+          meta_description: 'أفضل المفروشات والأثاث المنزلي بأسعار تنافسية',
           theme_settings: {
             primaryColor: '#c7a17a',
             secondaryColor: '#fff',
@@ -174,11 +174,11 @@ function App() {
       // Set default settings on any unexpected error
       setStoreSettings({
         id: '00000000-0000-0000-0000-000000000001',
-        store_name: 'متجر المنتجات',
-        store_description: 'أفضل المنتجات العالمية',
-        logo_url: '/logo.png',
-        meta_title: 'متجر المنتجات',
-        meta_description: 'أفضل المنتجات العالمية',
+        store_name: 'معرض السماح - فوربيد',
+        store_description: 'أفضل المفروشات والأثاث المنزلي',
+        logo_url: '/Logo.png',
+        meta_title: 'معرض السماح - فوربيد للمفروشات',
+        meta_description: 'أفضل المفروشات والأثاث المنزلي بأسعار تنافسية',
         theme_settings: {
           primaryColor: '#c7a17a',
           secondaryColor: '#fff',
@@ -214,7 +214,7 @@ function App() {
         <BannerSlider banners={layoutBanners} />
       )}
       <MainFade>{children}</MainFade>
-      {window.location.pathname === '/' && storeSettings?.show_testimonials && (
+      {window.location.pathname === '/' && (
         <Testimonials />
       )}
       <Footer storeSettings={storeSettings} />
@@ -225,8 +225,7 @@ function App() {
   if (loading) {
     return (
       <LoadingScreen
-        logoUrl={storeSettings?.logo_url || '/logo.png'} // Provide a default logo
-        storeName={storeSettings?.store_name || 'متجر المنتجات'}
+        logoUrl={storeSettings?.logo_url || '/Logo.png'} // Provide a default logo
       />
     );
   }
@@ -235,8 +234,8 @@ function App() {
     <ThemeProvider>
       <CartProvider>
         <Helmet>
-          <title>{storeSettings?.meta_title || storeSettings?.store_name || 'متجر إلكتروني'}</title>
-          <meta name="description" content={storeSettings?.meta_description || storeSettings?.store_description || 'أفضل المنتجات والعروض'} />
+          <title>{storeSettings?.meta_title || storeSettings?.store_name || 'معرض السماح - فوربيد'}</title>
+          <meta name="description" content={storeSettings?.meta_description || storeSettings?.store_description || 'أفضل المفروشات والأثاث المنزلي'} />
           {storeSettings?.keywords && storeSettings.keywords.length > 0 && (
             <meta name="keywords" content={storeSettings.keywords.join(', ')} />
           )}
@@ -311,7 +310,7 @@ function StaggeredHome({
   return (
     <>
       {/* Services component is part of the staggered load */}
-      <Services onLoaded={() => { /* Optionally handle service load */ }} />
+      <Services />
       {/* You can add more home page sections here to stagger them if needed */}
     </>
   );

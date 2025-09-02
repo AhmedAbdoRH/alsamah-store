@@ -249,8 +249,8 @@ export default function Header({ storeSettings }: HeaderProps) {
             
             <Link to="/" className="flex-shrink-0">
               <img 
-                src={storeSettings?.logo_url || '/logo.png'}
-                alt={storeSettings?.store_name || 'الشعار'} 
+                src={storeSettings?.logo_url || '/Logo.png'}
+                alt={storeSettings?.store_name || 'معرض السماح - فوربيد'} 
                 className="h-16 md:h-20 w-auto"
               />
             </Link>

@@ -14,6 +14,7 @@ export interface ProductImage {
 export interface Service {
   id: number;
   category_id: string;
+  subcategory_id?: string | null; // إضافة حقل الفئة الفرعية
   title: string;
   description: string | null;
   image_url: string | null;
@@ -25,6 +26,7 @@ export interface Service {
   is_best_seller?: boolean; // الأكثر مبيعاً
   created_at: string;
   category?: Category;
+  subcategory?: Subcategory; // إضافة علاقة الفئة الفرعية
   // For search results display
   displayImage?: string;
 }

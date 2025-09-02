@@ -41,8 +41,8 @@ export default function Footer({ storeSettings }: FooterProps) {
         <div className="flex flex-col items-center gap-1">
   {/* The entire line, now single */}
   <p className="text-white text-opacity-50 flex items-center gap-2 text-sm">
-    تم تطوير المتجر بواسطة
-    <Target className="text-red-500 h-6 w-6" /> {/* Icon is now red and part of the same line */}
+    تم تطوير الموقع بواسطة
+    <Target className="text-red-500 h-6 w-6" />
     <a href="https://RehlatHadaf.online" className="text-white text-opacity-80 underline hover:no-underline">رحلة هدف للتسويق التجاري</a>
   </p>
 </div>

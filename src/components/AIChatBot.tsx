@@ -56,7 +56,7 @@ export default function AIChatBot() {
     const [messages, setMessages] = useState<Message[]>([
         {
             id: '1',
-            text: 'أهلاً بيك في سفير المنتجات 🌹\nازاي أقدر أساعدك؟',
+            text: 'أهلاً بيك في معرض السماح - فوربيد 🏠\nازاي أقدر أساعدك في اختيار المفروشات؟',
             isUser: false,
             timestamp: new Date()
         }
@@ -101,10 +101,10 @@ export default function AIChatBot() {
 
     const generateStoreContext = () => {
         const { products, storeSettings } = storeData;
-        let context = `أنت مساعد ذكي لمتجر "${storeSettings?.store_name || 'سفير المنتجات'}".\n\n`;
+        let context = `أنت مساعد ذكي لمعرض "${storeSettings?.store_name || 'معرض السماح - فوربيد'}".\n\n`;
 
         if (products.length > 0) {
-            context += `المنتجات المتاحة في المتجر:\n`;
+            context += `المنتجات المتاحة في المعرض:\n`;
             products.forEach(product => {
                 const productUrl = `https://perfume-ambassador.com/product/${product.id}`;
                 context += `\n--- ${product.title} ---\n`;
@@ -259,7 +259,7 @@ export default function AIChatBot() {
                             <div className="flex items-center gap-3">
                                 <div className="w-8 h-8 bg-gradient-to-r from-green-500 to-emerald-500 rounded-full flex items-center justify-center"><Bot className="h-4 w-4 text-white" /></div>
                                 <div>
-                                    <h3 className="text-white font-semibold text-sm">مساعد {storeData.storeSettings?.store_name || 'سفير المنتجات'}</h3>
+                                    <h3 className="text-white font-semibold text-sm">مساعد {storeData.storeSettings?.store_name || 'معرض السماح - فوربيد'}</h3>
                                     <p className="text-green-400 text-xs">متصل الآن</p>
                                 </div>
                             </div>
@@ -320,7 +320,7 @@ export default function AIChatBot() {
                                     value={inputText}
                                     onChange={(e) => setInputText(e.target.value)}
                                     onKeyPress={handleKeyPress}
-                                    placeholder="اسأل عن أي عطر..."
+                                    placeholder="اسأل عن أي مفروشات..."
                                     disabled={isLoading}
                                     className="flex-1 bg-white/10 text-white placeholder-white/50 rounded-full px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 border border-white/20 disabled:opacity-50"
                                 />

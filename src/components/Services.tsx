@@ -51,7 +51,8 @@ export default function Services() {
         .from('services')
         .select(`
           *,
-          category:categories(*)
+          category:categories(*),
+          subcategory:subcategories(*)
         `)
         .order('created_at', { ascending: false });
 
@@ -104,12 +105,8 @@ export default function Services() {
     }
     
     // Then filter by subcategory if selected
-    // Note: Currently subcategory filtering is disabled as subcategory_id is not available in Service type
-    // You may need to update the database schema or Service type to include subcategory_id
     if (selectedSubcategory) {
-      // For now, we'll show all products in the category when a subcategory is selected
-      // This can be updated once the database relationship is properly set up
-      console.log('Subcategory filtering is not yet implemented');
+      filtered = filtered.filter(service => service.subcategory_id === selectedSubcategory);
     }
     
     return filtered;
@@ -164,7 +161,16 @@ export default function Services() {
           }}
           transition={{ duration: 0.6, ease: 'easeOut' }}
         >
-          منتجاتنا
+          {selectedSubcategory ? (
+            <>
+              {subcategories.find(sc => sc.id === selectedSubcategory)?.name} - 
+              {categories.find(c => c.id === selectedCategory)?.name}
+            </>
+          ) : selectedCategory ? (
+            categories.find(c => c.id === selectedCategory)?.name || 'منتجاتنا'
+          ) : (
+            'منتجاتنا'
+          )}
         </motion.h2>
 
         {/* Special Categories */}
@@ -276,21 +282,16 @@ export default function Services() {
         {/* Subcategories Section */}
         {openCategoryId && (
           <motion.div
-            className="mb-8"
+            className="mb-6"
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3 }}
           >
-            <div className="text-center mb-6">
-              <h4 className="text-white text-xl font-bold mb-3">الأقسام الفرعية</h4>
-              <div className="w-20 h-1 bg-gradient-to-r from-[var(--color-secondary,#34C759)] to-[var(--color-accent,#FFD700)] mx-auto rounded-full shadow-lg"></div>
-            </div>
-            
-            <div className="flex flex-wrap gap-4 justify-center">
+            <div className="flex flex-wrap gap-3 justify-center">
               {/* زر الكل */}
               <motion.button
                 onClick={() => handleSubcategoryClick(null)}
-                className={`px-8 py-4 rounded-full text-base font-semibold transition-all duration-300 transform hover:scale-105 ${
+                className={`px-6 py-2 rounded-full text-sm font-semibold transition-all duration-300 transform hover:scale-105 ${
                   selectedSubcategory === null
                     ? 'bg-gradient-to-r from-[var(--color-secondary,#34C759)] to-[var(--color-accent,#FFD700)] text-black shadow-xl'
                     : 'bg-white/10 text-white border-2 border-white/20 hover:bg-white/20 hover:border-white/40 hover:shadow-lg'
@@ -309,26 +310,28 @@ export default function Services() {
                 {subcategories
                   .filter(sc => sc.category_id === openCategoryId)
                   .map((subcategory, idx) => (
-                                         <motion.button
-                       key={subcategory.id}
-                       onClick={() => handleSubcategoryClick(subcategory.id)}
-                       className={`px-8 py-4 rounded-full text-base font-semibold transition-all duration-300 transform hover:scale-105 ${
-                         selectedSubcategory === subcategory.id
-                           ? 'bg-gradient-to-r from-[var(--color-secondary,#34C759)] to-[var(--color-accent,#FFD700)] text-black shadow-xl'
-                           : 'bg-white/10 text-white border-2 border-white/20 hover:bg-white/20 hover:border-white/40 hover:shadow-lg'
-                       }`}
-                       initial={{ opacity: 0, scale: 0.8 }}
-                       animate={{ opacity: 1, scale: 1 }}
-                       exit={{ opacity: 0, scale: 0.8 }}
-                       transition={{ duration: 0.2, delay: idx * 0.05 }}
-                       whileHover={{ scale: 1.05 }}
-                       whileTap={{ scale: 0.95 }}
-                     >
-                       {subcategory.name}
-                     </motion.button>
+                    <motion.button
+                      key={subcategory.id}
+                      onClick={() => handleSubcategoryClick(subcategory.id)}
+                      className={`px-6 py-2 rounded-full text-sm font-semibold transition-all duration-300 transform hover:scale-105 ${
+                        selectedSubcategory === subcategory.id
+                          ? 'bg-gradient-to-r from-[var(--color-secondary,#34C759)] to-[var(--color-accent,#FFD700)] text-black shadow-xl'
+                          : 'bg-white/10 text-white border-2 border-white/20 hover:bg-white/20 hover:border-white/40 hover:shadow-lg'
+                      }`}
+                      initial={{ opacity: 0, scale: 0.8 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.8 }}
+                      transition={{ duration: 0.2, delay: idx * 0.05 }}
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                    >
+                      {subcategory.name}
+                    </motion.button>
                   ))}
               </AnimatePresence>
             </div>
+            
+
           </motion.div>
         )}
 
