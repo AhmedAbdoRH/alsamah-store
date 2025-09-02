@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
-import type { Service } from '../types/database';
+import type { Service, ProductSize } from '../types/database';
 import { MessageCircle } from 'lucide-react';
 import { useCart } from '../contexts/CartContext';
 import { toast } from 'react-toastify';
@@ -29,11 +29,7 @@ export default function ProductDetails() {
   const [prevImageIndexState, setPrevImageIndexState] = useState<number | null>(null);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const { addToCart } = useCart();
-
-  // Scroll to top when product changes
-  useEffect(() => {
-    window.scrollTo(0, 0);
-  }, [id]);
+  const [selectedSize, setSelectedSize] = useState<ProductSize | null>(null);
 
   // Scroll to top when product changes
   useEffect(() => {
@@ -62,7 +58,7 @@ export default function ProductDetails() {
 
       const { data, error: fetchError } = await supabase
         .from('services')
-        .select('*')
+        .select('*, sizes:product_sizes(*)')
         .eq('id', serviceId)
         .single();
 
@@ -70,6 +66,9 @@ export default function ProductDetails() {
       if (!data) throw new Error('المنتج غير موجود');
 
       setService(data);
+      if (data.has_multiple_sizes && data.sizes && data.sizes.length > 0) {
+        setSelectedSize(data.sizes[0]);
+      }
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -82,9 +81,9 @@ export default function ProductDetails() {
     
     const { data } = await supabase
       .from('services')
-      .select('*')
-      .eq('category_id', service.category_id) // Filter by the same category
-      .neq('id', id) // Exclude current product
+      .select('*, sizes:product_sizes(*)')
+      .eq('category_id', service.category_id)
+      .neq('id', id)
       .limit(10);
       
     setSuggested(data || []);
@@ -242,9 +241,7 @@ export default function ProductDetails() {
                         {images.map((img, idx) => (
                           <button
                             key={img + idx}
-                            className={`w-2 h-2 rounded-full border-none transition-colors ease-in-out duration-500 ${
-                              currentImageIndex === idx ? 'bg-white' : 'bg-white/30'
-                            }`}
+                            className={`w-2 h-2 rounded-full border-none transition-colors ease-in-out duration-500 ${ currentImageIndex === idx ? 'bg-white' : 'bg-white/30'}`}
                             onClick={() => setCurrentImageIndex(idx)}
                             aria-label={`عرض الصورة رقم ${idx + 1}`}
                             type="button"
@@ -261,14 +258,43 @@ export default function ProductDetails() {
   {service.description}
 </p>
                 <div className="border-t border-gray-700 pt-6 mb-6">
-                  <div className="text-2xl font-bold text-accent mb-6 text-right">
-                    {service.sale_price ? (
-                      <div className="flex flex-col items-end">
-                        <span className="text-2xl text-[#FFD700]">{service.sale_price} ج</span>
-                        <span className="text-lg text-gray-400 line-through">{service.price} ج</span>
+                  {service.has_multiple_sizes && service.sizes && service.sizes.length > 0 && (
+                    <div className="mb-4">
+                      <h4 className="text-lg font-bold mb-2 text-secondary text-right">المقاسات المتوفرة</h4>
+                      <div className="flex flex-wrap gap-2 justify-end">
+                        {service.sizes.map((size) => (
+                          <button
+                            key={size.id}
+                            onClick={() => setSelectedSize(size)}
+                            className={`px-4 py-2 rounded-lg font-bold transition-colors ${ selectedSize?.id === size.id
+                                ? 'bg-secondary text-primary'
+                                : 'bg-gray-700 text-white hover:bg-gray-600'}`}
+                          >
+                            {size.size}
+                          </button>
+                        ))}
                       </div>
+                    </div>
+                  )}
+                  <div className="text-2xl font-bold text-accent mb-6 text-right">
+                    {service.has_multiple_sizes ? (
+                      selectedSize?.sale_price ? (
+                        <div className="flex flex-col items-end">
+                          <span className="text-2xl text-[#FFD700]">{selectedSize.sale_price} ج</span>
+                          <span className="text-lg text-gray-400 line-through">{selectedSize.price} ج</span>
+                        </div>
+                      ) : (
+                        <span>{selectedSize?.price} ج</span>
+                      )
                     ) : (
-                      <span>{service.price} ج</span>
+                      service.sale_price ? (
+                        <div className="flex flex-col items-end">
+                          <span className="text-2xl text-[#FFD700]">{service.sale_price} ج</span>
+                          <span className="text-lg text-gray-400 line-through">{service.price} ج</span>
+                        </div>
+                      ) : (
+                        <span>{service.price} ج</span>
+                      )
                     )}
                   </div>
                   <div className="flex gap-4 items-center">
@@ -282,13 +308,28 @@ export default function ProductDetails() {
                     <button
                       onClick={(e) => {
                         e.preventDefault();
-                        addToCart({
-                          id: service.id,
-                          title: service.title,
-                          price: service.sale_price || service.price,
-                          imageUrl: service.image_url || ''
-                        });
-                        toast.success('تمت إضافة المنتج إلى السلة');
+                        if (service.has_multiple_sizes) {
+                          if (selectedSize) {
+                            addToCart({
+                              id: service.id,
+                              title: service.title,
+                              price: selectedSize.sale_price || selectedSize.price,
+                              imageUrl: service.image_url || '',
+                              size: selectedSize.size,
+                            });
+                            toast.success('تمت إضافة المنتج إلى السلة');
+                          } else {
+                            toast.error('الرجاء اختيار مقاس');
+                          }
+                        } else {
+                          addToCart({
+                            id: service.id,
+                            title: service.title,
+                            price: service.sale_price || service.price || 0,
+                            imageUrl: service.image_url || '',
+                          });
+                          toast.success('تمت إضافة المنتج إلى السلة');
+                        }
                       }}
                       className="bg-[#FFD700] hover:bg-yellow-500 text-black p-3 rounded-lg font-bold flex items-center justify-center"
                       title="أضف إلى السلة"
@@ -343,7 +384,14 @@ export default function ProductDetails() {
                   />
                   <div className="mt-2 text-sm md:text-base font-bold text-secondary truncate text-right">{item.title}</div>
                   <div className="flex flex-col items-end">
-                    {item.sale_price ? (
+                    {item.has_multiple_sizes && item.sizes && item.sizes.length > 0 && item.sizes[0].sale_price ? (
+                      <>
+                        <span className="text-xs md:text-sm text-[#FFD700]">{item.sizes[0].sale_price} ج</span>
+                        <span className="text-xs text-gray-400 line-through">{item.sizes[0].price} ج</span>
+                      </>
+                    ) : item.has_multiple_sizes && item.sizes && item.sizes.length > 0 ? (
+                      <span className="text-xs md:text-sm text-accent">{item.sizes[0].price} ج</span>
+                    ) : item.sale_price ? (
                       <>
                         <span className="text-xs md:text-sm text-[#FFD700]">{item.sale_price} ج</span>
                         <span className="text-xs text-gray-400 line-through">{item.price} ج</span>

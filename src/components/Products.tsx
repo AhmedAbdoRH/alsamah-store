@@ -175,7 +175,7 @@ export default function Services() {
                   setSelectedCategory(category.id);
                   setOpenCategoryId(prev => (prev === category.id ? null : category.id));
                 }}
-                className={`p-4 rounded-xl transition-all duration-300 ${
+                className={`p-2 rounded-lg transition-all duration-300 ${
                   category.id === selectedCategory
                     ? `bg-[var(--color-secondary,#34C759)] text-black font-bold shadow-md`
                     : 'bg-black/20 text-white hover:bg-black/30 hover:shadow-md'
@@ -185,9 +185,9 @@ export default function Services() {
                 exit={{ opacity: 0, y: 20 }}
                 transition={{ duration: 0.23, delay: 0.06 + idx * 0.05 }}
               >
-                <h3 className="text-lg font-semibold mb-1">{category.name}</h3>
+                <h3 className="text-base font-semibold mb-1">{category.name}</h3>
                 {category.description && (
-                  <p className="text-sm opacity-80">{category.description}</p>
+                  <p className="text-xs opacity-80">{category.description}</p>
                 )}
               </motion.button>
             ))}

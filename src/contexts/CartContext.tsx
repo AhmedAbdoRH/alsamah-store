@@ -2,13 +2,14 @@ import { createContext, useContext, useState, useMemo, useCallback, ReactNode } 
 import { toast } from 'react-toastify';
 
 interface CartItem {
-  id: string;
-  title: string;
-  price: string;
-  numericPrice: number;
-  quantity: number;
-  imageUrl?: string;
-  productId?: string;
+  id: string;
+  title: string;
+  price: string;
+  numericPrice: number;
+  quantity: number;
+  imageUrl?: string;
+  productId?: string;
+  size?: string;
 }
 
 interface CartContextType {
@@ -85,7 +86,7 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     setCartItems(prevItems => {
       // Check if item already exists in cart by title (since we might not have productId)
       const existingItem = prevItems.find(
-        cartItem => cartItem.title === item.title
+        cartItem => cartItem.title === item.title && cartItem.size === item.size
       );
 
       if (existingItem) {
@@ -203,7 +204,7 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
     // Format order details
     const orderDetails = cartItems.map(item => 
-      `- ${item.title} (${item.quantity} × ${item.price})`
+      `- ${item.title}${item.size ? ` (${item.size})` : ''} (${item.quantity} × ${item.price})`
     ).join('%0A');
 
     // Create the message with order details and total

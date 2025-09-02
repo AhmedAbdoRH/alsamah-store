@@ -11,6 +11,16 @@ export interface ProductImage {
   created_at: string;
 }
 
+export interface ProductSize {
+  id: number;
+  service_id: number;
+  size: string;
+  price: number;
+  sale_price?: number | null;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface Service {
   id: number;
   category_id: string;
@@ -19,9 +29,11 @@ export interface Service {
   description: string | null;
   image_url: string | null;
   images?: ProductImage[]; // Array of product images
-  images_urls?: string[]; // روابط صور متعددة
-  price: string | null;
-  sale_price: string | null; // السعر المخفض
+  gallery?: string[]; // روابط صور متعددة
+  price?: number | null;
+  sale_price?: number | null;
+  has_multiple_sizes?: boolean;
+  sizes?: ProductSize[]; // Array of product sizes
   is_featured?: boolean; // أحدث العروض
   is_best_seller?: boolean; // الأكثر مبيعاً
   created_at: string;
