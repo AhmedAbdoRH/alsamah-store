@@ -346,7 +346,7 @@ export default function AIChatBot() {
                                             <div className={`rounded-2xl px-3 py-2 text-[13.6px] flex flex-col ${message.isUser ? 'bg-gradient-to-r from-green-600 to-emerald-700 text-white' : 'bg-white/10 text-white border border-white/20'}`}>
                                                 <RenderMessageWithLinks text={message.text} />
                                                 {!message.isUser && message.id !== '1' && (
-                                                    <a href="https://wa.me/2010013210146" target="_blank" rel="noopener noreferrer" className="mt-3 flex items-center justify-center gap-2 text-xs bg-green-600/30 hover:bg-green-600/50 text-white font-semibold py-1.5 px-3 rounded-lg transition-all border border-green-500/50">
+                                                    <a href="https://wa.me/201013210146" target="_blank" rel="noopener noreferrer" className="mt-3 flex items-center justify-center gap-2 text-xs bg-green-600/30 hover:bg-green-600/50 text-white font-semibold py-1.5 px-3 rounded-lg transition-all border border-green-500/50">
                                                         <MessageSquare className="w-3 h-3" /> تواصل واتساب مع البائع
                                                     </a>
                                                 )}
