@@ -1,13 +1,11 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import ServiceCard from './ServiceCard';
 import { supabase } from '../lib/supabase';
 import type { Service, Category, Subcategory } from '../types/database';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Link } from 'react-router-dom';
 
 const lightGold = '#FFD700';
 const brownDark = '#3d2c1d';
-const accentColor = '#d99323';
 
 export default function Services() {
   const [services, setServices] = useState<Service[]>([]);
@@ -361,8 +359,10 @@ export default function Services() {
                     title={service.title}
                     description={service.description || ''}
                     imageUrl={service.image_url || ''}
-                    price={service.price || ''}
-                    salePrice={service.sale_price || null}
+                    price={service.price}
+                    salePrice={service.sale_price}
+                    has_multiple_sizes={service.has_multiple_sizes}
+                    sizes={service.sizes}
                   />
                 </motion.div>
               ))
