@@ -84,8 +84,18 @@ export default function AIChatBot() {
 
     const fetchStoreData = async () => {
         try {
-            const { data: products, error: productsError } = await supabase.from('services').select('*, category:categories(*)').order('created_at', { ascending: false });
+            const { data: products, error: productsError } = await supabase
+                .from('services')
+                .select(`
+                    *,
+                    category:categories(*),
+                    sizes:product_sizes(*)
+                `)
+                .order('created_at', { ascending: false });
             if (productsError) throw productsError;
+            
+            // Debug: Log the actual data to see what we're getting
+            console.log('ChatBot Debug - Products with sizes:', products);
 
             const { data: categories, error: categoriesError } = await supabase.from('categories').select('*').order('name');
             if (categoriesError) throw categoriesError;
@@ -109,8 +119,55 @@ export default function AIChatBot() {
                 const productUrl = `https://perfume-ambassador.com/product/${product.id}`;
                 context += `\n--- ${product.title} ---\n`;
                 context += `الوصف: ${product.description || 'لا يوجد وصف متاح'}\n`;
-                if (product.price) context += `السعر: ${product.price} ج.م\n`;
-                if (product.sale_price) context += `السعر بعد الخصم: ${product.sale_price} ج.م\n`;
+                
+                // معالجة الأسعار المتعددة
+                if (product.has_multiple_sizes && product.sizes && product.sizes.length > 0) {
+                    context += `الأسعار المتاحة (متعددة المقاسات):\n`;
+                    
+                    // ترتيب المقاسات حسب السعر
+                    const sortedSizes = product.sizes.sort((a, b) => {
+                        const priceA = parseFloat(a.sale_price as any) || parseFloat(a.price as any);
+                        const priceB = parseFloat(b.sale_price as any) || parseFloat(b.price as any);
+                        return priceA - priceB;
+                    });
+                    
+                    sortedSizes.forEach(size => {
+                        if (size.sale_price) {
+                            context += `  - مقاس ${size.size}: ${size.sale_price} ج.م (بعد الخصم) - السعر الأصلي: ${size.price} ج.م\n`;
+                        } else {
+                            context += `  - مقاس ${size.size}: ${size.price} ج.م\n`;
+                        }
+                    });
+                    
+                    // إضافة أقل وأعلى سعر متاح
+                    const validPrices = product.sizes
+                        .map(s => parseFloat(s.price as any))
+                        .filter(p => !isNaN(p) && p > 0);
+                    const validSalePrices = product.sizes
+                        .map(s => parseFloat(s.sale_price as any))
+                        .filter(p => !isNaN(p) && p > 0);
+                    
+                    if (validSalePrices.length > 0) {
+                        const minSalePrice = Math.min(...validSalePrices);
+                        const maxSalePrice = Math.max(...validSalePrices);
+                        context += `  أقل سعر متاح: ${minSalePrice} ج.م (بعد الخصم)\n`;
+                        context += `  أعلى سعر متاح: ${maxSalePrice} ج.م (بعد الخصم)\n`;
+                    } else if (validPrices.length > 0) {
+                        const minPrice = Math.min(...validPrices);
+                        const maxPrice = Math.max(...validPrices);
+                        context += `  أقل سعر متاح: ${minPrice} ج.م\n`;
+                        context += `  أعلى سعر متاح: ${maxPrice} ج.م\n`;
+                    }
+                    
+                    // إضافة معلومات إضافية للمساعدة
+                    context += `  ملاحظة: هذا المنتج متوفر بعدة مقاسات، كل مقاس له سعر مختلف.\n`;
+                    context += `  المقاسات المتاحة: ${product.sizes.map(s => s.size).join(', ')}\n`;
+                } else {
+                    // أسعار منتجات السعر الواحد
+                    if (product.price) context += `السعر: ${product.price} ج.م\n`;
+                    if (product.sale_price) context += `السعر بعد الخصم: ${product.sale_price} ج.م\n`;
+                }
+                
                 if (product.category?.name) context += `الفئة: ${product.category.name}\n`;
                 // إضافة الرابط في البيانات التي سيراها النموذج ليستخدمها
                 context += `الرابط للاستخدام في الرد: ${productUrl}\n`;
@@ -123,15 +180,22 @@ export default function AIChatBot() {
 2.  اجعل ردودك مختصرة ومباشرة قدر الإمكان.
 3.  عند اقتراح أي منتج، يجب أن تذكر نبذة قصيرة عنه ثم تضع رابطه مباشرةً باستخدام تنسيق الماركدون هكذا: [النبذة المختصرة عن المنتج واسمه](رابط المنتج الذي تم تزويدك به).
 4.  مهم جداً: لا تعرض المنتجات في جداول أبداً. كل منتج يجب أن يكون في فقرة خاصة به مع زر "عرض المنتج" تحته.
-5.  شجع العميل على طرح المزيد من الأسئلة بقول "لو حابب تفاصيل أكتر، أنا موجود يا فندم." في نهاية الرد.
-6.  إذا لم تجد المنتج المطلوب، اقترح أقرب منتج مشابه له.
-7.  لا تذكر أي معلومات تواصل مثل رقم الواتساب
-8.  لا تنادي العميل بكلمة "يا باشا" بل "يا فندم" (ومش لازم دايمًا تناديه بيها).
-9.  استخدم إيموجيز بسيطة وملائمة في الردود لإضافة لمسة ودية، 
-10. قبل اسم المنتج ضيف ▫️
-11. بلاش تحط كلمة "عرض المنتج" يكفي زر عرض المنتج اسفل النبذه فقط 
-12. رقم التواصل (لو العميل طلبه فقط) : 0 10 27381559
-13. استخدم صياغة محايدة أو مذكر، وما تستعملش صيغة المؤنث إلا لو العميلة بنفسها وضحت إنها أنثى أو ظهر من كلامها بشكل واضح انها انثى 
+5.  عند ذكر أسعار المنتجات متعددة المقاسات، اذكر أقل سعر متاح مع توضيح أنه "يبدأ من" هذا السعر.
+6.  إذا سأل العميل عن أسعار مقاسات معينة، اذكر الأسعار المحددة لكل مقاس.
+7.  عند السؤال عن "كم سعر المنتج" أو "كم يكلف"، اذكر أقل سعر متاح مع توضيح أنه "يبدأ من" هذا السعر.
+8.  إذا سأل العميل عن مقاس معين (مثل "كم سعر المقاس الكبير")، اذكر السعر المحدد لذلك المقاس.
+9.  فهم أسئلة المقاسات: عندما يسأل العميل "اكبر مقاس بكام" أو "المقاس الكبير بكام" أو "المقاس الصغير بكام"، يجب أن تذكر المنتجات المتاحة مع أسعار أكبر أو أصغر مقاس حسب السؤال.
+10. إذا سأل العميل عن "اكبر مقاس" أو "المقاس الكبير"، اذكر المنتجات مع أعلى سعر متاح.
+11. إذا سأل العميل عن "اصغر مقاس" أو "المقاس الصغير"، اذكر المنتجات مع أقل سعر متاح.
+12. شجع العميل على طرح المزيد من الأسئلة بقول "لو حابب تفاصيل أكتر، أنا موجود يا فندم." في نهاية الرد.
+13. إذا لم تجد المنتج المطلوب، اقترح أقرب منتج مشابه له.
+14. لا تذكر أي معلومات تواصل مثل رقم الواتساب
+15. لا تنادي العميل بكلمة "يا باشا" بل "يا فندم" (ومش لازم دايمًا تناديه بيها).
+16. استخدم إيموجيز بسيطة وملائمة في الردود لإضافة لمسة ودية، 
+17. قبل اسم المنتج ضيف ▫️
+18. بلاش تحط كلمة "عرض المنتج" يكفي زر عرض المنتج اسفل النبذه فقط 
+19. رقم التواصل (لو العميل طلبه فقط) : 0 10 27381559
+20. استخدم صياغة محايدة أو مذكر، وما تستعملش صيغة المؤنث إلا لو العميلة بنفسها وضحت إنها أنثى أو ظهر من كلامها بشكل واضح انها انثى 
 .`;
 
         return context;
