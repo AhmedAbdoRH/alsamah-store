@@ -1,41 +1,55 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { MessageCircle, Sparkles, ShoppingCart, Check } from 'lucide-react';
 import { useCart } from '../contexts/CartContext';
+import type { ProductSize } from '../types/database';
 
 interface ProductCardProps {
   title: string;
   description: string;
   imageUrl: string;
-  price: string;
-  salePrice?: string | null;
+  price?: number | null; // Make price optional and number type
+  salePrice?: number | null; // Make salePrice optional and number type
   id: string | number;
+  has_multiple_sizes?: boolean;
+  sizes?: ProductSize[];
 }
 
 // Define the light gold color using the hex code from the Hero component
 const lightGold = '#FFD700'; // This is standard gold color
 
-export default function ProductCard({ title, description, imageUrl, price, salePrice, id }: ProductCardProps) {
-  /**
-   * Handles the click event for the "Contact Now" button.
-   * Prevents the default link behavior and opens a WhatsApp chat
-   * with a pre-filled message including product details.
-   * @param e - The mouse event.
-   */
-  const handleContactClick = (e: React.MouseEvent) => {
-    e.preventDefault(); // Prevent the default link behavior
-    // Construct the URL for the specific product page
-    const productUrl = `${window.location.origin}/product/${id}`;;
-    // Create the pre-filled message for WhatsApp
-    const message = `استفسار عن المنتج: ${title}
-رابط المنتج: ${productUrl}`;
-    // Open the WhatsApp chat link in a new tab
-    window.open(`https://wa.me/201027381559?text=${encodeURIComponent(message)}`, '_blank');
-  };
+export default function ProductCard({ title, description, imageUrl, price, salePrice, id, has_multiple_sizes, sizes }: ProductCardProps) {
 
   const { addToCart } = useCart();
   const [isAdding, setIsAdding] = useState(false);
   const [isAdded, setIsAdded] = useState(false);
+
+  const { displayPrice, displaySalePrice } = useMemo(() => {
+    if (has_multiple_sizes && sizes && sizes.length > 0) {
+      const validPrices = sizes.map(s => s.price).filter(p => p !== null && p !== undefined) as number[];
+      const validSalePrices = sizes.map(s => s.sale_price).filter(p => p !== null && p !== undefined) as number[];
+
+      const minPrice = validPrices.length > 0 ? Math.min(...validPrices) : null;
+      const minSalePrice = validSalePrices.length > 0 ? Math.min(...validSalePrices) : null;
+
+      if (minSalePrice !== null && minSalePrice > 0) {
+        return { displayPrice: minPrice, displaySalePrice: minSalePrice };
+      }
+      
+      return { displayPrice: minPrice, displaySalePrice: null };
+    }
+
+    return { displayPrice: price, displaySalePrice: salePrice };
+  }, [has_multiple_sizes, sizes, price, salePrice]);
+
+  console.log('ProductCard Debug - title:', title, 'has_multiple_sizes:', has_multiple_sizes, 'sizes:', sizes, 'price:', price, 'salePrice:', salePrice, 'displayPrice:', displayPrice, 'displaySalePrice:', displaySalePrice);
+
+  const handleContactClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    const productUrl = `${window.location.origin}/product/${id}`;
+    const message = `استفسار عن المنتج: ${title}\nرابط المنتج: ${productUrl}`;
+    window.open(`https://wa.me/201027381559?text=${encodeURIComponent(message)}`, '_blank');
+  };
 
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -43,18 +57,16 @@ export default function ProductCard({ title, description, imageUrl, price, saleP
     
     setIsAdding(true);
     
-    // Add to cart
     addToCart({
       id,
       title,
-      price: salePrice || price, // Use sale price if available
+      price: (displaySalePrice || displayPrice || 0).toString(), // Use calculated display price as string
+      numericPrice: parseFloat((displaySalePrice || displayPrice || 0).toString()), // Convert to number for numericPrice
       imageUrl,
     });
     
-    // Show added feedback
     setIsAdded(true);
     
-    // Reset button state after animation
     setTimeout(() => {
       setIsAdding(false);
       setTimeout(() => setIsAdded(false), 2000);
@@ -90,22 +102,25 @@ export default function ProductCard({ title, description, imageUrl, price, saleP
       <div className="px-6 pb-6 pt-0">
         <div className="flex justify-between items-center">
           <div className="flex flex-col items-end">
-            {salePrice ? (
+            {displaySalePrice !== null ? (
               <>
-                <span className={`font-bold text-lg text-[${lightGold}]`}>{salePrice} ج</span>
-                <span className="text-sm text-gray-400 line-through">{price} ج</span>
+                <span className={`font-bold text-lg text-[${lightGold}]`}>{displaySalePrice} ج</span>
+                {displayPrice !== null && (
+                  <span className="text-sm text-gray-400 line-through">{displayPrice} ج</span>
+                )}
               </>
+            ) : displayPrice !== null ? (
+              <span className={`font-bold text-lg text-[${lightGold}]`}>{displayPrice} ج</span>
             ) : (
-              <span className={`font-bold text-lg text-[${lightGold}]`}>{price} ج</span>
+              <span className="text-sm text-gray-400">السعر غير متاح</span>
             )}
           </div>
           
           <div className="flex gap-2">
-            {/* Add to Cart Button */}
             <button
               onClick={handleAddToCart}
               disabled={isAdding || isAdded}
-              className={`flex items-center justify-center p-2 rounded-lg transition-all duration-300 ${
+              className={`flex items-center justify-center p-2 rounded-lg transition-all duration-300 ${ 
                 isAdded 
                   ? 'bg-green-500 text-white' 
                   : `bg-[${lightGold}]/90 hover:bg-[${lightGold}] text-secondary`
@@ -121,7 +136,6 @@ export default function ProductCard({ title, description, imageUrl, price, saleP
               )}
             </button>
             
-            {/* Contact Button */}
             <button
               onClick={handleContactClick}
               className={`bg-[${lightGold}]/90 hover:bg-yellow-500 text-secondary px-4 py-2 rounded-lg transition-colors duration-300 flex items-center gap-2 backdrop-blur-sm`}

@@ -68,7 +68,8 @@ export default function Services() {
         .from('services')
         .select(`
           *,
-          category:categories(*)
+          category:categories(*),
+          sizes:product_sizes(*)
         `)
         .order('created_at', { ascending: false });
 
@@ -263,10 +264,12 @@ export default function Services() {
                 <ServiceCard
                   id={service.id}
                   title={service.title}
-                  description={service.description || ''}
-                  imageUrl={service.image_url || ''}
-                  price={service.price || ''}
-                  salePrice={service.sale_price || null}
+                  description={service.description}
+                  imageUrl={service.image_url}
+                  price={service.price}
+                  salePrice={service.sale_price}
+                  has_multiple_sizes={service.has_multiple_sizes}
+                  sizes={service.sizes}
                 />
               </motion.div>
             ))}

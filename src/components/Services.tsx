@@ -52,7 +52,8 @@ export default function Services() {
         .select(`
           *,
           category:categories(*),
-          subcategory:subcategories(*)
+          subcategory:subcategories(*),
+          sizes:product_sizes(*)
         `)
         .order('created_at', { ascending: false });
 
