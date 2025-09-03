@@ -1744,19 +1744,19 @@ export default function AdminDashboard({ onSettingsUpdate }: AdminDashboardProps
 
                         {newService.has_multiple_sizes ? (
                           <div>
-                            <h4 className="text-lg font-semibold mb-2 text-white">المقاسات والأسعار</h4>
+                            <h4 className="text-lg font-semibold mb-2 text-white">المتغيرات والأسعار</h4>
                             {newService.sizes && newService.sizes.map((size, index) => (
                               <div key={index} className="flex items-center gap-2 mb-2">
                                 <input
                                   type="text"
-                                  placeholder="المقاس"
+                                  placeholder="المتغير (مقاس, وزن , عدد..)"
                                   value={size.size}
                                   onChange={(e) => {
                                     const newSizes = [...newService.sizes];
                                     newSizes[index].size = e.target.value;
                                     setNewService({ ...newService, sizes: newSizes });
                                   }}
-                                  className="w-full p-2 rounded text-white bg-gray-700 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                  className="w-full p-2 rounded text-white bg-gray-800 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
                                   required
                                 />
                                 <input
@@ -1773,7 +1773,7 @@ export default function AdminDashboard({ onSettingsUpdate }: AdminDashboardProps
                                 />
                                 <input
                                   type="number"
-                                  placeholder="سعر التخفيض"
+                                  placeholder="  سعر التخفيض (اختياري)"
                                   value={size.sale_price || ''}
                                   onChange={(e) => {
                                     const newSizes = [...newService.sizes];
