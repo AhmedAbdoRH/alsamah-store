@@ -71,7 +71,7 @@ export default function AdminDashboard({ onSettingsUpdate }: AdminDashboardProps
   const [editingSubcategory, setEditingSubcategory] = useState<string | null>(null);
   const [selectedSubcategory, setSelectedSubcategory] = useState<string>('');
   const [newBanner, setNewBanner] = useState<Partial<Banner>>({
-    type: 'text',
+    type: 'image',
     title: '',
     description: '',
     image_url: ''

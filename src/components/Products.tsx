@@ -7,13 +7,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 const lightGold = '#FFD700';
 const brownDark = '#3d2c1d';
 
-// Helper function to truncate text to 7 words
-const truncateToWords = (text: string, wordLimit: number = 7) => {
-  if (!text) return '';
-  const words = text.trim().split(/\s+/);
-  if (words.length <= wordLimit) return text;
-  return words.slice(0, wordLimit).join(' ') + '...';
-};
 
 // Direct, simple card rendering inside the main component
 const ProductCardDirect = ({ service }: { service: Service }) => {
@@ -40,9 +33,6 @@ const ProductCardDirect = ({ service }: { service: Service }) => {
       </div>
       <div className="p-4 text-right">
         <h3 className="text-lg font-bold mb-2 text-secondary truncate">{service.title}</h3>
-        <p className="text-sm text-secondary/70 mb-2">
-          {truncateToWords(service.description ? service.description.split(/\r?\n/)[0] : '', 7)}
-        </p>
         <div className="flex flex-col items-end font-bold">
           {/* Simplified price display logic, directly from ProductDetails.tsx */}
           {service.has_multiple_sizes && service.sizes && service.sizes.length > 0 ? (

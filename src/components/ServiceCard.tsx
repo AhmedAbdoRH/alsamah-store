@@ -15,13 +15,6 @@ interface ProductCardProps {
   sizes?: ProductSize[];
 }
 
-// Helper function to truncate text to a specific word count
-const truncateText = (text: string, wordLimit: number = 7) => {
-  if (!text) return '';
-  const words = text.trim().split(/\s+/);
-  if (words.length <= wordLimit) return text;
-  return words.slice(0, wordLimit).join(' ') + '...';
-};
 
 // Define the light gold color using the hex code from the Hero component
 const lightGold = '#FFD700'; // This is standard gold color
@@ -185,9 +178,6 @@ export default function ProductCard({ title, description, imageUrl, price, saleP
             {title}
             <Sparkles className={`h-4 w-4 text-[${lightGold}]`} />
           </h3>
-          <p className="text-secondary/70 mb-4">
-            {truncateText(description ? description.split(/\r?\n/)[0] : '', 7)}
-          </p>
         </div>
       </Link>
       
