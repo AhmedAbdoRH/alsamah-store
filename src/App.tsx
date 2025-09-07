@@ -133,10 +133,10 @@ function App() {
         // Set default settings if fetch fails
         setStoreSettings({
           id: '00000000-0000-0000-0000-000000000001',
-          store_name: 'معرض السماح - فوربيد',
+          store_name: 'معرض السماح للمفروشات',
           store_description: 'أفضل المفروشات والأثاث المنزلي',
-          logo_url: '/Logo.png',
-          meta_title: 'معرض السماح - فوربيد للمفروشات',
+          logo_url: '/logo.png',
+          meta_title: 'معرض السماح للمفروشات',
           meta_description: 'أفضل المفروشات والأثاث المنزلي بأسعار تنافسية',
           theme_settings: {
             primaryColor: '#c7a17a',
@@ -155,10 +155,10 @@ function App() {
         // No data found, set default settings
         setStoreSettings({
           id: '00000000-0000-0000-0000-000000000001',
-          store_name: 'معرض السماح - فوربيد',
+          store_name: 'معرض السماح للمفروشات',
           store_description: 'أفضل المفروشات والأثاث المنزلي',
-          logo_url: '/Logo.png',
-          meta_title: 'معرض السماح - فوربيد للمفروشات',
+          logo_url: '/logo.png',
+          meta_title: 'معرض السماح للمفروشات',
           meta_description: 'أفضل المفروشات والأثاث المنزلي بأسعار تنافسية',
           theme_settings: {
             primaryColor: '#c7a17a',
@@ -225,7 +225,7 @@ function App() {
   if (loading) {
     return (
       <LoadingScreen
-        logoUrl={storeSettings?.logo_url || '/Logo.png'} // Provide a default logo
+        logoUrl={storeSettings?.logo_url || '/logo.png'} // Provide a default logo
       />
     );
   }
@@ -234,7 +234,7 @@ function App() {
     <ThemeProvider>
       <CartProvider>
         <Helmet>
-          <title>{storeSettings?.meta_title || storeSettings?.store_name || 'معرض السماح - فوربيد'}</title>
+          <title>{storeSettings?.meta_title || storeSettings?.store_name || 'معرض السماح للمفروشات'}</title>
           <meta name="description" content={storeSettings?.meta_description || storeSettings?.store_description || 'أفضل المفروشات والأثاث المنزلي'} />
           {storeSettings?.keywords && storeSettings.keywords.length > 0 && (
             <meta name="keywords" content={storeSettings.keywords.join(', ')} />
