@@ -24,6 +24,7 @@ export default function Header({ storeSettings }: HeaderProps) {
   const [categories, setCategories] = useState<Category[]>([]);
   const [subcatsByCategory, setSubcatsByCategory] = useState<Record<string, { id: string; name: string }[]>>({});
   const [loadingCategories, setLoadingCategories] = useState(true);
+  const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set());
   const menuRef = useRef<HTMLDivElement>(null);
   const searchRef = useRef<HTMLDivElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
@@ -101,6 +102,18 @@ export default function Header({ storeSettings }: HeaderProps) {
     setSearchQuery('');
     setSearchResults([]);
     setIsSearchFocused(false);
+  };
+
+  const toggleCategoryExpansion = (categoryId: string) => {
+    setExpandedCategories(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(categoryId)) {
+        newSet.delete(categoryId);
+      } else {
+        newSet.add(categoryId);
+      }
+      return newSet;
+    });
   };
 
   // Fetch categories for both mobile menu and desktop dropdown
@@ -373,39 +386,66 @@ export default function Header({ storeSettings }: HeaderProps) {
                           <div className="text-white/50 text-center py-4">جاري التحميل...</div>
                         ) : categories.length > 0 ? (
                           <div className="space-y-1">
-                            {categories.map((category) => (
-                              <div key={category.id} className="relative group">
-                                <Link 
-                                  to={`/category/${category.id}`}
-                                  className="block px-4 py-3 text-white hover:bg-white/10 rounded-lg transition-colors font-medium flex items-center justify-between"
-                                >
-                                  <span>{category.name}</span>
-                                  {subcatsByCategory[category.id] && subcatsByCategory[category.id].length > 0 && (
-                                    <ChevronDown className="h-4 w-4 text-white/60" />
-                                  )}
-                                </Link>
-                                
-                                {/* Subcategories Sidebar */}
-                                {subcatsByCategory[category.id] && subcatsByCategory[category.id].length > 0 && (
-                                  <div className="absolute left-full top-0 ml-2 w-64 bg-black/95 backdrop-blur-lg rounded-lg shadow-xl border border-white/10 z-50 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300">
-                                    <div className="p-4">
-                                      <h4 className="text-white font-bold text-lg mb-4 border-b border-white/10 pb-2">{category.name}</h4>
-                                      <div className="space-y-2">
-                                        {subcatsByCategory[category.id].map((subcat) => (
-                                          <Link
-                                            key={subcat.id}
-                                            to={`/subcategory/${subcat.id}`}
-                                            className="block px-4 py-3 text-white/80 hover:text-white hover:bg-white/10 rounded-lg text-sm transition-colors font-medium"
-                                          >
-                                            {subcat.name}
-                                          </Link>
-                                        ))}
-                                      </div>
-                                    </div>
+                            {categories.map((category) => {
+                              const hasSubcategories = subcatsByCategory[category.id] && subcatsByCategory[category.id].length > 0;
+                              const isExpanded = expandedCategories.has(category.id);
+                              
+                              return (
+                                <div key={category.id} className="relative">
+                                  <div className="flex items-center">
+                                    <Link 
+                                      to={`/category/${category.id}`}
+                                      className="flex-1 px-4 py-3 text-white hover:bg-white/10 rounded-lg transition-colors font-medium"
+                                    >
+                                      {category.name}
+                                    </Link>
+                                    {hasSubcategories && (
+                                      <button
+                                        onClick={(e) => {
+                                          e.preventDefault();
+                                          toggleCategoryExpansion(category.id);
+                                        }}
+                                        className="px-2 py-3 text-white/60 hover:text-white hover:bg-white/10 rounded-lg transition-all duration-200"
+                                      >
+                                        <motion.div
+                                          animate={{ rotate: isExpanded ? 180 : 0 }}
+                                          transition={{ duration: 0.2 }}
+                                        >
+                                          <ChevronDown className="h-4 w-4" />
+                                        </motion.div>
+                                      </button>
+                                    )}
                                   </div>
-                                )}
-                              </div>
-                            ))}
+                                  
+                                  {/* Subcategories Dropdown */}
+                                  <AnimatePresence>
+                                    {hasSubcategories && isExpanded && (
+                                      <motion.div
+                                        initial={{ opacity: 0, height: 0 }}
+                                        animate={{ opacity: 1, height: 'auto' }}
+                                        exit={{ opacity: 0, height: 0 }}
+                                        transition={{ duration: 0.3, ease: 'easeInOut' }}
+                                        className="overflow-hidden"
+                                      >
+                                        <div className="px-4 py-2 bg-white/5 rounded-lg mt-1 ml-4">
+                                          <div className="space-y-1">
+                                            {subcatsByCategory[category.id].map((subcat) => (
+                                              <Link
+                                                key={subcat.id}
+                                                to={`/subcategory/${subcat.id}`}
+                                                className="block px-3 py-2 text-white/80 hover:text-white hover:bg-white/10 rounded-md text-sm transition-colors font-medium"
+                                              >
+                                                • {subcat.name}
+                                              </Link>
+                                            ))}
+                                          </div>
+                                        </div>
+                                      </motion.div>
+                                    )}
+                                  </AnimatePresence>
+                                </div>
+                              );
+                            })}
                           </div>
                         ) : (
                           <div className="text-white/50 text-center py-4">لا توجد أقسام متاحة</div>
@@ -655,32 +695,67 @@ export default function Header({ storeSettings }: HeaderProps) {
                       <div className="px-5 py-4 text-white/50 text-base text-center">جاري التحميل...</div>
                     ) : categories.length > 0 ? (
                       <ul className="mt-1">
-                        {categories.map((category) => (
-                          <li key={category.id} className="border-b border-white/5 last:border-0">
-                            <Link 
-                              to={`/category/${category.id}`}
-                              className="block px-5 py-4 text-white hover:bg-white/10 transition-colors text-base font-medium"
-                              onClick={() => setIsMenuOpen(false)}
-                            >
-                              {category.name}
-                            </Link>
-                            {subcatsByCategory[category.id] && subcatsByCategory[category.id].length > 0 && (
-                              <ul className="px-3 pb-3 flex flex-col gap-1">
-                                {subcatsByCategory[category.id].map((sc) => (
-                                  <li key={sc.id}>
-                                    <Link
-                                      to={`/subcategory/${sc.id}`}
-                                      className="block px-3 py-2 text-white/80 hover:text-white hover:bg-white/5 rounded-md text-sm"
-                                      onClick={() => setIsMenuOpen(false)}
+                        {categories.map((category) => {
+                          const hasSubcategories = subcatsByCategory[category.id] && subcatsByCategory[category.id].length > 0;
+                          const isExpanded = expandedCategories.has(category.id);
+                          
+                          return (
+                            <li key={category.id} className="border-b border-white/5 last:border-0">
+                              <div className="flex items-center">
+                                <Link 
+                                  to={`/category/${category.id}`}
+                                  className="flex-1 px-5 py-4 text-white hover:bg-white/10 transition-colors text-base font-medium"
+                                  onClick={() => setIsMenuOpen(false)}
+                                >
+                                  {category.name}
+                                </Link>
+                                {hasSubcategories && (
+                                  <button
+                                    onClick={(e) => {
+                                      e.preventDefault();
+                                      toggleCategoryExpansion(category.id);
+                                    }}
+                                    className="px-3 py-4 text-white/60 hover:text-white hover:bg-white/10 transition-all duration-200"
+                                  >
+                                    <motion.div
+                                      animate={{ rotate: isExpanded ? 180 : 0 }}
+                                      transition={{ duration: 0.2 }}
                                     >
-                                      • {sc.name}
-                                    </Link>
-                                  </li>
-                                ))}
-                              </ul>
-                            )}
-                          </li>
-                        ))}
+                                      <ChevronDown className="h-5 w-5" />
+                                    </motion.div>
+                                  </button>
+                                )}
+                              </div>
+                              
+                              {/* Subcategories for Mobile */}
+                              <AnimatePresence>
+                                {hasSubcategories && isExpanded && (
+                                  <motion.div
+                                    initial={{ opacity: 0, height: 0 }}
+                                    animate={{ opacity: 1, height: 'auto' }}
+                                    exit={{ opacity: 0, height: 0 }}
+                                    transition={{ duration: 0.3, ease: 'easeInOut' }}
+                                    className="overflow-hidden"
+                                  >
+                                    <ul className="px-3 pb-3 flex flex-col gap-1 bg-white/5">
+                                      {subcatsByCategory[category.id].map((sc) => (
+                                        <li key={sc.id}>
+                                          <Link
+                                            to={`/subcategory/${sc.id}`}
+                                            className="block px-3 py-2 text-white/80 hover:text-white hover:bg-white/5 rounded-md text-sm"
+                                            onClick={() => setIsMenuOpen(false)}
+                                          >
+                                            • {sc.name}
+                                          </Link>
+                                        </li>
+                                      ))}
+                                    </ul>
+                                  </motion.div>
+                                )}
+                              </AnimatePresence>
+                            </li>
+                          );
+                        })}
                       </ul>
                     ) : (
                       <div className="px-5 py-4 text-white/50 text-base text-center">لا توجد أقسام متاحة</div>

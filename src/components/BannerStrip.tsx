@@ -1,5 +1,6 @@
 import React from 'react';
 import type { Banner } from '../types/database';
+import { motion } from 'framer-motion';
 
 interface BannerStripProps {
   banners: Banner[];
@@ -30,13 +31,36 @@ export default function BannerStrip({ banners }: BannerStripProps) {
           }}
         >
           <div className="container mx-auto">
-            <h2 className="text-lg md:text-xl font-normal">
+            <motion.h2 
+              className="text-lg md:text-xl font-normal"
+              animate={{
+                scale: [1, 1.02, 1],
+                opacity: [0.9, 1, 0.9]
+              }}
+              transition={{
+                duration: 3,
+                repeat: Infinity,
+                ease: "easeInOut"
+              }}
+            >
               {banner.title}
-            </h2>
+            </motion.h2>
             {banner.description && (
-              <p className="text-sm md:text-base mt-1 opacity-90">
+              <motion.p 
+                className="text-sm md:text-base mt-1 opacity-90"
+                animate={{
+                  scale: [1, 1.01, 1],
+                  opacity: [0.8, 0.9, 0.8]
+                }}
+                transition={{
+                  duration: 3.5,
+                  repeat: Infinity,
+                  ease: "easeInOut",
+                  delay: 0.5
+                }}
+              >
                 {banner.description}
-              </p>
+              </motion.p>
             )}
           </div>
         </div>
