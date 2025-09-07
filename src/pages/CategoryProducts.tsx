@@ -122,25 +122,28 @@ export default function CategoryProducts() {
         </div>
 
         <div className="bg-white/5 backdrop-blur-xl rounded-2xl p-8 border border-white/10 shadow-2xl shadow-black/40">
-          <h1 className="text-3xl font-bold mb-12 text-accent">{category.name}</h1>
-          {category.description && (
-            <p className="text-secondary/70 mb-8">{category.description}</p>
-          )}
+          <div className="mb-8">
+            <h1 className="text-3xl font-bold mb-4 text-accent">{category.name}</h1>
+            
+            {/* Subcategories list - smaller and closer to title */}
+            {subcategories.length > 0 && (
+              <div className="mb-6 flex flex-wrap gap-2">
+                {subcategories.map((sc) => (
+                  <Link
+                    key={sc.id}
+                    to={`/subcategory/${sc.id}`}
+                    className="px-3 py-1.5 text-sm rounded-lg bg-white/20 text-white/90 hover:bg-white/30 hover:text-white transition-all duration-200 border border-white/8 hover:border-white/25"
+                  >
+                    {sc.name}
+                  </Link>
+                ))}
+              </div>
+            )}
 
-          {/* Subcategories list */}
-          {subcategories.length > 0 && (
-            <div className="mb-8 flex flex-wrap gap-3">
-              {subcategories.map((sc) => (
-                <Link
-                  key={sc.id}
-                  to={`/subcategory/${sc.id}`}
-                  className="px-4 py-2 rounded-full bg-white/10 text-white hover:bg-white/20 transition-colors border border-white/10"
-                >
-                  {sc.name}
-                </Link>
-              ))}
-            </div>
-          )}
+            {category.description && (
+              <p className="text-secondary/70">{category.description}</p>
+            )}
+          </div>
 
           {services.length === 0 ? (
             <p className="text-center text-secondary/70 py-8">
