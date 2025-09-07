@@ -196,35 +196,45 @@ function App() {
     banners: Banner[];
   }
 
-  const Layout = ({ children, banners: layoutBanners }: LayoutProps) => ( // Renamed banners prop to avoid conflict
-    <div
-      className="min-h-screen font-cairo" // Ensure font-cairo is defined in tailwind.config.js if used like this
-      style={{
-        background: (storeSettings && (storeSettings as any).theme_settings?.backgroundGradient)
-          ? (storeSettings as any).theme_settings.backgroundGradient
-          : (storeSettings && (storeSettings as any).theme_settings?.backgroundColor)
-            ? (storeSettings as any).theme_settings.backgroundColor
-            : "", // Default fallback
-        backgroundSize: 'cover',
-        backgroundRepeat: 'no-repeat',
-        backgroundAttachment: 'fixed',
-      }}
-    >
-      <Header storeSettings={storeSettings} />
-      {window.location.pathname === '/' && layoutBanners.length > 0 && (
-        <BannerSlider banners={layoutBanners} />
-      )}
-      {window.location.pathname === '/' && (
-        <BannerStrip banners={banners} />
-      )}
-      <MainFade>{children}</MainFade>
-      {window.location.pathname === '/' && (
-        <Testimonials />
-      )}
-      <Footer storeSettings={storeSettings} />
-      <WhatsAppButton />
-    </div>
-  );
+  const Layout = ({ children, banners: layoutBanners }: LayoutProps) => {
+    // Filter banners for different purposes
+    const mainBanners = layoutBanners.filter(banner => 
+      banner.type === 'image' && banner.is_active
+    );
+    const stripBanners = layoutBanners.filter(banner => 
+      banner.type === 'strip' && banner.is_active
+    );
+
+    return (
+      <div
+        className="min-h-screen font-cairo" // Ensure font-cairo is defined in tailwind.config.js if used like this
+        style={{
+          background: (storeSettings && (storeSettings as any).theme_settings?.backgroundGradient)
+            ? (storeSettings as any).theme_settings.backgroundGradient
+            : (storeSettings && (storeSettings as any).theme_settings?.backgroundColor)
+              ? (storeSettings as any).theme_settings.backgroundColor
+              : "", // Default fallback
+          backgroundSize: 'cover',
+          backgroundRepeat: 'no-repeat',
+          backgroundAttachment: 'fixed',
+        }}
+      >
+        <Header storeSettings={storeSettings} />
+        {window.location.pathname === '/' && mainBanners.length > 0 && (
+          <BannerSlider banners={mainBanners} />
+        )}
+        {window.location.pathname === '/' && stripBanners.length > 0 && (
+          <BannerStrip banners={stripBanners} />
+        )}
+        <MainFade>{children}</MainFade>
+        {window.location.pathname === '/' && (
+          <Testimonials />
+        )}
+        <Footer storeSettings={storeSettings} />
+        <WhatsAppButton />
+      </div>
+    );
+  };
 
   if (loading) {
     return (

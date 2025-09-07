@@ -1083,7 +1083,7 @@ export default function AdminDashboard({ onSettingsUpdate }: AdminDashboardProps
       // Only add strip properties if type is strip
       if (newBanner.type === 'strip') {
         bannerData.strip_text_color = newBanner.strip_text_color || '#ffffff';
-        bannerData.strip_background_color = newBanner.strip_background_color || '#2a2a2a';
+        bannerData.strip_background_color = newBanner.strip_background_color || '#b8860b';
         bannerData.strip_position = newBanner.strip_position || 'below_main';
       }
 
@@ -1112,7 +1112,7 @@ export default function AdminDashboard({ onSettingsUpdate }: AdminDashboardProps
         description: '',
         image_url: '',
         strip_text_color: '#ffffff',
-        strip_background_color: '#2a2a2a',
+        strip_background_color: '#b8860b',
         strip_position: 'below_main'
       });
       await fetchData();
@@ -1170,7 +1170,7 @@ export default function AdminDashboard({ onSettingsUpdate }: AdminDashboardProps
       // Only add strip properties if type is strip
       if (newBanner.type === 'strip') {
         bannerData.strip_text_color = newBanner.strip_text_color || '#ffffff';
-        bannerData.strip_background_color = newBanner.strip_background_color || '#2a2a2a';
+        bannerData.strip_background_color = newBanner.strip_background_color || '#b8860b';
         bannerData.strip_position = newBanner.strip_position || 'below_main';
       }
 
@@ -1205,7 +1205,7 @@ export default function AdminDashboard({ onSettingsUpdate }: AdminDashboardProps
         description: '',
         image_url: '',
         strip_text_color: '#ffffff',
-        strip_background_color: '#2a2a2a',
+        strip_background_color: '#b8860b',
         strip_position: 'below_main'
       });
       setEditingBanner(null);
@@ -1682,14 +1682,6 @@ export default function AdminDashboard({ onSettingsUpdate }: AdminDashboardProps
                           required
                           disabled={isLoading}
                         />
-                        <textarea
-                          placeholder="وصف البانر الشريطي (اختياري)"
-                          value={newBanner.description || ''}
-                          onChange={(e) => setNewBanner({ ...newBanner, type: 'strip', description: e.target.value })}
-                          rows={2}
-                          className="w-full p-3 rounded text-white bg-gray-700 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                          disabled={isLoading}
-                        />
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           <div>
                             <label className="block text-sm font-medium text-gray-300 mb-2">لون النص</label>
@@ -1705,7 +1697,7 @@ export default function AdminDashboard({ onSettingsUpdate }: AdminDashboardProps
                             <label className="block text-sm font-medium text-gray-300 mb-2">لون الخلفية</label>
                             <input
                               type="color"
-                              value={newBanner.strip_background_color || '#2a2a2a'}
+                              value={newBanner.strip_background_color || '#b8860b'}
                               onChange={(e) => setNewBanner({ ...newBanner, strip_background_color: e.target.value })}
                               className="w-full h-10 rounded border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
                               disabled={isLoading}

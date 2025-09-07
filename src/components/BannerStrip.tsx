@@ -23,14 +23,14 @@ export default function BannerStrip({ banners }: BannerStripProps) {
       {stripBanners.map((banner) => (
         <div
           key={banner.id}
-          className="w-full py-4 px-4 text-center"
+          className="w-full py-1 px-4 text-center md:py-3"
           style={{
-            backgroundColor: (banner as any).strip_background_color || '#2a2a2a',
+            backgroundColor: (banner as any).strip_background_color || '#b8860b',
             color: (banner as any).strip_text_color || '#ffffff',
           }}
         >
           <div className="container mx-auto">
-            <h2 className="text-lg md:text-xl font-bold">
+            <h2 className="text-lg md:text-xl font-normal">
               {banner.title}
             </h2>
             {banner.description && (
