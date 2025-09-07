@@ -45,12 +45,16 @@ export interface Service {
 
 export interface Banner {
   id: string;
-  type: 'image' | 'text';
+  type: 'image' | 'text' | 'strip';
   title: string | null;
   description: string | null;
   image_url: string | null;
   is_active: boolean;
   created_at: string;
+  // Strip banner specific properties
+  strip_text_color?: string | null;
+  strip_background_color?: string | null;
+  strip_position?: 'above_main' | 'below_main' | null;
 }
 
 export interface StoreSettings {

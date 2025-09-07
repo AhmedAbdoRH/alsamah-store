@@ -93,7 +93,7 @@ export default function ProductDetails() {
 
   // Extracted background styles for reuse
   const backgroundStyles = {
-    background: 'var(--background-gradient, var(--background-color, #232526))',
+        background: '#2a2a2a !important',
     backgroundSize: 'cover',
     backgroundRepeat: 'no-repeat',
     backgroundAttachment: 'fixed',

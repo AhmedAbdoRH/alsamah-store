@@ -6,6 +6,7 @@ import { CartProvider } from './contexts/CartContext';
 import Cart from './components/Cart';
 import Header from './components/Header';
 import BannerSlider from './components/BannerSlider';
+import BannerStrip from './components/BannerStrip';
 import Services from './components/Services';
 import Footer from './components/Footer';
 import Testimonials from './components/Testimonials';
@@ -143,7 +144,7 @@ function App() {
             secondaryColor: '#fff',
             fontFamily: 'Cairo, sans-serif',
             backgroundColor: '#000',
-            backgroundGradient: 'linear-gradient(135deg, #232526 0%, #414345 100%)'
+            backgroundGradient: ''
           }
         } as StoreSettings);
         return;
@@ -165,7 +166,7 @@ function App() {
             secondaryColor: '#fff',
             fontFamily: 'Cairo, sans-serif',
             backgroundColor: '#000',
-            backgroundGradient: 'linear-gradient(135deg, #232526 0%, #414345 100%)'
+            backgroundGradient: ''
           }
         } as StoreSettings);
       }
@@ -203,7 +204,7 @@ function App() {
           ? (storeSettings as any).theme_settings.backgroundGradient
           : (storeSettings && (storeSettings as any).theme_settings?.backgroundColor)
             ? (storeSettings as any).theme_settings.backgroundColor
-            : "linear-gradient(135deg, #232526 0%, #414345 100%)", // Default fallback
+            : "", // Default fallback
         backgroundSize: 'cover',
         backgroundRepeat: 'no-repeat',
         backgroundAttachment: 'fixed',
@@ -212,6 +213,9 @@ function App() {
       <Header storeSettings={storeSettings} />
       {window.location.pathname === '/' && layoutBanners.length > 0 && (
         <BannerSlider banners={layoutBanners} />
+      )}
+      {window.location.pathname === '/' && (
+        <BannerStrip banners={banners} />
       )}
       <MainFade>{children}</MainFade>
       {window.location.pathname === '/' && (

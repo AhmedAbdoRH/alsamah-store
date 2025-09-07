@@ -103,20 +103,20 @@ export default function Header({ storeSettings }: HeaderProps) {
     setIsSearchFocused(false);
   };
 
-  // Fetch categories for the mobile menu
+  // Fetch categories for both mobile menu and desktop dropdown
   useEffect(() => {
     const fetchCategories = async () => {
       try {
         const { data, error } = await supabase
           .from('categories')
-          .select('id, name_ar, created_at, description_ar')
-          .order('name_ar');
+          .select('id, name, created_at, description')
+          .order('name');
 
         if (error) throw error;
         const mapped = (data || []).map((c: any) => ({
           id: c.id as string,
-          name: (c.name_ar as string) || '',
-          description: (c.description_ar as string) || null,
+          name: (c.name as string) || '',
+          description: (c.description as string) || null,
           created_at: (c.created_at as string) || ''
         }));
         setCategories(mapped);
@@ -140,10 +140,9 @@ export default function Header({ storeSettings }: HeaderProps) {
       }
     };
 
-    if (isMenuOpen) {
-      fetchCategories();
-    }
-  }, [isMenuOpen]);
+    // Load categories on component mount
+    fetchCategories();
+  }, []);
 
   // Handle cart preview timeout
   useEffect(() => {
@@ -357,6 +356,65 @@ export default function Header({ storeSettings }: HeaderProps) {
                     الرئيسية
                   </Link>
                 </li>
+                
+                {/* Desktop Categories Dropdown */}
+                <li className="hidden md:block relative group">
+                  <button className="text-white hover:text-[#FFD700] transition-colors duration-300 flex items-center gap-1">
+                    الأقسام
+                    <ChevronDown className="h-4 w-4" />
+                  </button>
+                  
+                  {/* Categories Dropdown */}
+                  <div className="absolute top-full right-0 mt-2 w-80 bg-black/95 backdrop-blur-lg rounded-lg shadow-xl border border-white/10 z-50 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300">
+                    <div className="p-4">
+                      <h3 className="text-white font-bold text-lg mb-4 border-b border-white/10 pb-2">جميع الأقسام</h3>
+                      <div className="max-h-96 overflow-y-auto">
+                        {loadingCategories ? (
+                          <div className="text-white/50 text-center py-4">جاري التحميل...</div>
+                        ) : categories.length > 0 ? (
+                          <div className="space-y-1">
+                            {categories.map((category) => (
+                              <div key={category.id} className="relative group">
+                                <Link 
+                                  to={`/category/${category.id}`}
+                                  className="block px-4 py-3 text-white hover:bg-white/10 rounded-lg transition-colors font-medium flex items-center justify-between"
+                                >
+                                  <span>{category.name}</span>
+                                  {subcatsByCategory[category.id] && subcatsByCategory[category.id].length > 0 && (
+                                    <ChevronDown className="h-4 w-4 text-white/60" />
+                                  )}
+                                </Link>
+                                
+                                {/* Subcategories Sidebar */}
+                                {subcatsByCategory[category.id] && subcatsByCategory[category.id].length > 0 && (
+                                  <div className="absolute left-full top-0 ml-2 w-64 bg-black/95 backdrop-blur-lg rounded-lg shadow-xl border border-white/10 z-50 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300">
+                                    <div className="p-4">
+                                      <h4 className="text-white font-bold text-lg mb-4 border-b border-white/10 pb-2">{category.name}</h4>
+                                      <div className="space-y-2">
+                                        {subcatsByCategory[category.id].map((subcat) => (
+                                          <Link
+                                            key={subcat.id}
+                                            to={`/subcategory/${subcat.id}`}
+                                            className="block px-4 py-3 text-white/80 hover:text-white hover:bg-white/10 rounded-lg text-sm transition-colors font-medium"
+                                          >
+                                            {subcat.name}
+                                          </Link>
+                                        ))}
+                                      </div>
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <div className="text-white/50 text-center py-4">لا توجد أقسام متاحة</div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </li>
+                
                 <li>
                   <a href="#contact" className="text-white hover:text-[#FFD700] transition-colors duration-300">
                     تواصل معنا

@@ -51,7 +51,7 @@ export default function AdminDashboard({ onSettingsUpdate }: AdminDashboardProps
   const [editingTestimonial, setEditingTestimonial] = useState<string | null>(null);
   const [uploadingTestimonialImage, setUploadingTestimonialImage] = useState(false);
   const [productsSubTab, setProductsSubTab] = useState<'services' | 'categories' | 'subcategories'>('services');
-  const [bannersSubTab, setBannersSubTab] = useState<'text' | 'image'>('image');
+  const [bannersSubTab, setBannersSubTab] = useState<'text' | 'image' | 'strip'>('image');
 
   const [newCategory, setNewCategory] = useState({ name: '', description: '' });
   const [newSubcategory, setNewSubcategory] = useState({ category_id: '', name_ar: '', description_ar: '' });
@@ -74,7 +74,10 @@ export default function AdminDashboard({ onSettingsUpdate }: AdminDashboardProps
     type: 'image',
     title: '',
     description: '',
-    image_url: ''
+    image_url: '',
+    strip_text_color: '#ffffff',
+    strip_background_color: '#2a2a2a',
+    strip_position: 'below_main'
   });
 
   const [storeSettings, setStoreSettings] = useState<StoreSettings>({
@@ -1063,9 +1066,13 @@ export default function AdminDashboard({ onSettingsUpdate }: AdminDashboardProps
       setError("صورة البانر مطلوبة للنوع المصور.");
       return;
     }
+    if (newBanner.type === 'strip' && !newBanner.title?.trim()) {
+      setError("عنوان البانر الشريطي مطلوب.");
+      return;
+    }
     setIsLoading(true);
     try {
-      const bannerData = {
+      const bannerData: any = {
         type: newBanner.type,
         title: newBanner.title || null,
         description: newBanner.description || null,
@@ -1073,14 +1080,40 @@ export default function AdminDashboard({ onSettingsUpdate }: AdminDashboardProps
         is_active: true
       };
 
+      // Only add strip properties if type is strip
+      if (newBanner.type === 'strip') {
+        bannerData.strip_text_color = newBanner.strip_text_color || '#ffffff';
+        bannerData.strip_background_color = newBanner.strip_background_color || '#2a2a2a';
+        bannerData.strip_position = newBanner.strip_position || 'below_main';
+      }
+
       const { error } = await supabase.from('banners').insert([bannerData]);
-      if (error) throw error;
+      if (error) {
+        // If strip columns don't exist, try without them
+        if (error.message.includes('strip_background_color')) {
+          console.log('Strip columns not available, creating banner without strip properties');
+          const basicBannerData = {
+            type: newBanner.type,
+            title: newBanner.title || null,
+            description: newBanner.description || null,
+            image_url: newBanner.image_url || null,
+            is_active: true
+          };
+          const { error: basicError } = await supabase.from('banners').insert([basicBannerData]);
+          if (basicError) throw basicError;
+        } else {
+          throw error;
+        }
+      }
 
       setNewBanner({
         type: bannersSubTab, // Keep the current sub-tab type
         title: '',
         description: '',
         image_url: '',
+        strip_text_color: '#ffffff',
+        strip_background_color: '#2a2a2a',
+        strip_position: 'below_main'
       });
       await fetchData();
       setSuccessMsg("تمت إضافة البانر بنجاح!");
@@ -1098,7 +1131,10 @@ export default function AdminDashboard({ onSettingsUpdate }: AdminDashboardProps
       title: banner.title || '',
       description: banner.description || '',
       image_url: banner.image_url || '',
-      is_active: banner.is_active
+      is_active: banner.is_active,
+      strip_text_color: banner.strip_text_color || '#ffffff',
+      strip_background_color: banner.strip_background_color || '#2a2a2a',
+      strip_position: banner.strip_position || 'below_main'
     });
     const formElement = document.getElementById('banner-form');
     formElement?.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -1116,10 +1152,14 @@ export default function AdminDashboard({ onSettingsUpdate }: AdminDashboardProps
       setError("صورة البانر مطلوبة للنوع المصور.");
       return;
     }
+    if (newBanner.type === 'strip' && !newBanner.title?.trim()) {
+      setError("عنوان البانر الشريطي مطلوب.");
+      return;
+    }
 
     setIsLoading(true);
     try {
-      const bannerData = {
+      const bannerData: any = {
         type: newBanner.type,
         title: newBanner.title || null,
         description: newBanner.description || null,
@@ -1127,17 +1167,46 @@ export default function AdminDashboard({ onSettingsUpdate }: AdminDashboardProps
         is_active: newBanner.is_active
       };
 
+      // Only add strip properties if type is strip
+      if (newBanner.type === 'strip') {
+        bannerData.strip_text_color = newBanner.strip_text_color || '#ffffff';
+        bannerData.strip_background_color = newBanner.strip_background_color || '#2a2a2a';
+        bannerData.strip_position = newBanner.strip_position || 'below_main';
+      }
+
       const { error } = await supabase
         .from('banners')
         .update(bannerData)
         .eq('id', editingBanner);
-      if (error) throw error;
+      if (error) {
+        // If strip columns don't exist, try without them
+        if (error.message.includes('strip_background_color')) {
+          console.log('Strip columns not available, updating banner without strip properties');
+          const basicBannerData = {
+            type: newBanner.type,
+            title: newBanner.title || null,
+            description: newBanner.description || null,
+            image_url: newBanner.image_url || null,
+            is_active: newBanner.is_active
+          };
+          const { error: basicError } = await supabase
+            .from('banners')
+            .update(basicBannerData)
+            .eq('id', editingBanner);
+          if (basicError) throw basicError;
+        } else {
+          throw error;
+        }
+      }
 
       setNewBanner({
         type: bannersSubTab,
         title: '',
         description: '',
         image_url: '',
+        strip_text_color: '#ffffff',
+        strip_background_color: '#2a2a2a',
+        strip_position: 'below_main'
       });
       setEditingBanner(null);
       await fetchData();
@@ -1156,6 +1225,9 @@ export default function AdminDashboard({ onSettingsUpdate }: AdminDashboardProps
       title: '',
       description: '',
       image_url: '',
+      strip_text_color: '#ffffff',
+      strip_background_color: '#2a2a2a',
+      strip_position: 'below_main'
     });
   };
 
@@ -1382,7 +1454,7 @@ export default function AdminDashboard({ onSettingsUpdate }: AdminDashboardProps
                         </h2>
                         <p className="text-gray-400 mt-1 text-sm">
                             {activeTab === 'products' && 'إدارة المنتجات والأقسام المرتبطة بها.'}
-                            {activeTab === 'banners' && 'يمكنك إضافة بانر نصي أو صور.'}
+                            {activeTab === 'banners' && 'يمكنك إضافة بانر نصي أو صور أو شريطي.'}
                             {activeTab === 'testimonials' && 'إدارة وتعديل آراء وتقييمات العملاء.'}
                             {activeTab === 'store' && 'تعديل إعدادات المتجر والمعلومات العامة.'}
                         </p>
@@ -1571,6 +1643,10 @@ export default function AdminDashboard({ onSettingsUpdate }: AdminDashboardProps
                       onClick={() => {setBannersSubTab('text'); setNewBanner({type: 'text'})}}
                       className={`flex-1 py-2 font-bold transition-colors rounded-t-md ${ bannersSubTab === 'text' ? 'bg-blue-600 text-white' : 'text-gray-400 hover:bg-gray-700'}`}
                     >بانرات نصية</button>
+                    <button
+                      onClick={() => {setBannersSubTab('strip'); setNewBanner({type: 'strip'})}}
+                      className={`flex-1 py-2 font-bold transition-colors rounded-t-md ${ bannersSubTab === 'strip' ? 'bg-blue-600 text-white' : 'text-gray-400 hover:bg-gray-700'}`}
+                    >بانرات شريطية</button>
                   </div>
                   
                   <form id="banner-form" onSubmit={editingBanner ? handleUpdateBanner : handleAddBanner} className="mb-10 space-y-4">
@@ -1593,6 +1669,61 @@ export default function AdminDashboard({ onSettingsUpdate }: AdminDashboardProps
                           className="w-full p-3 rounded text-white bg-gray-700 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
                           disabled={isLoading}
                         />
+                      </>
+                    )}
+                    {bannersSubTab === 'strip' && (
+                      <>
+                        <input
+                          type="text"
+                          placeholder="عنوان البانر الشريطي"
+                          value={newBanner.title || ''}
+                          onChange={(e) => setNewBanner({ ...newBanner, type: 'strip', title: e.target.value })}
+                          className="w-full p-3 rounded text-white bg-gray-700 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          required
+                          disabled={isLoading}
+                        />
+                        <textarea
+                          placeholder="وصف البانر الشريطي (اختياري)"
+                          value={newBanner.description || ''}
+                          onChange={(e) => setNewBanner({ ...newBanner, type: 'strip', description: e.target.value })}
+                          rows={2}
+                          className="w-full p-3 rounded text-white bg-gray-700 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          disabled={isLoading}
+                        />
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div>
+                            <label className="block text-sm font-medium text-gray-300 mb-2">لون النص</label>
+                            <input
+                              type="color"
+                              value={newBanner.strip_text_color || '#ffffff'}
+                              onChange={(e) => setNewBanner({ ...newBanner, strip_text_color: e.target.value })}
+                              className="w-full h-10 rounded border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                              disabled={isLoading}
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-300 mb-2">لون الخلفية</label>
+                            <input
+                              type="color"
+                              value={newBanner.strip_background_color || '#2a2a2a'}
+                              onChange={(e) => setNewBanner({ ...newBanner, strip_background_color: e.target.value })}
+                              className="w-full h-10 rounded border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                              disabled={isLoading}
+                            />
+                          </div>
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-300 mb-2">موضع البانر</label>
+                          <select
+                            value={newBanner.strip_position || 'below_main'}
+                            onChange={(e) => setNewBanner({ ...newBanner, strip_position: e.target.value as 'above_main' | 'below_main' })}
+                            className="w-full p-3 rounded text-white bg-gray-700 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            disabled={isLoading}
+                          >
+                            <option value="below_main">أسفل البانر الرئيسي</option>
+                            <option value="above_main">فوق البانر الرئيسي</option>
+                          </select>
+                        </div>
                       </>
                     )}
                     {bannersSubTab === 'image' && (

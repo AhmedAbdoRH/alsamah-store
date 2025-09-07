@@ -189,7 +189,7 @@ export default function Products() {
 
   if (isLoading) {
     return (
-      <div className={`py-16 bg-gradient-to-br from-[${brownDark}] to-black`}>
+      <div className="py-16" style={{backgroundColor: '#2a2a2a'}}>
         <div className="container mx-auto px-4 text-center text-white">
           جاري تحميل المنتجات...
         </div>
@@ -199,7 +199,7 @@ export default function Products() {
 
   if (error) {
     return (
-      <div className={`py-16 bg-gradient-to-br from-[${brownDark}] to-black`}>
+      <div className="py-16" style={{backgroundColor: '#2a2a2a'}}>
         <div className="container mx-auto px-4 text-center text-red-500">
           حدث خطأ أثناء تحميل المنتجات: {error}
         </div>
@@ -208,7 +208,7 @@ export default function Products() {
   }
 
   return (
-    <section className={`py-16 bg-gradient-to-br from-[${brownDark}] to-black`} id="products">
+    <section className="py-16" style={{backgroundColor: '#2a2a2a'}} id="products">
       <motion.div
         className="container mx-auto px-4 bg-white/5 backdrop-blur-xl rounded-2xl p-8 border border-white/10 shadow-2xl shadow-black/40"
         initial="hidden"

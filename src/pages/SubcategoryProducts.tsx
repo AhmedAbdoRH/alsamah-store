@@ -56,11 +56,11 @@ export default function SubcategoryProducts() {
       if (subcat?.category_id) {
         const { data: cat, error: catErr } = await supabase
           .from('categories')
-          .select('id, name_ar')
+          .select('id, name')
           .eq('id', subcat.category_id)
           .single();
         if (catErr) throw catErr;
-        setCategory({ id: cat.id, name: (cat as any).name_ar } as Category);
+        setCategory({ id: cat.id, name: cat.name } as Category);
       }
 
       // Fetch services for this subcategory
@@ -79,15 +79,15 @@ export default function SubcategoryProducts() {
 
   if (isLoading) {
     return (
-      <div
-        className="min-h-screen pt-24 flex items-center justify-center"
-        style={{
-          background: 'var(--background-gradient, var(--background-color, #232526))',
-          backgroundSize: 'cover',
-          backgroundRepeat: 'no-repeat',
-          backgroundAttachment: 'fixed',
-        }}
-      >
+    <div
+      className="min-h-screen pt-24 flex items-center justify-center"
+      style={{
+        background: '#2a2a2a !important',
+        backgroundSize: 'cover',
+        backgroundRepeat: 'no-repeat',
+        backgroundAttachment: 'fixed',
+      }}
+    >
         <div className="text-xl text-secondary">جاري التحميل...</div>
       </div>
     );
@@ -95,15 +95,15 @@ export default function SubcategoryProducts() {
 
   if (error || !subcategory) {
     return (
-      <div
-        className="min-h-screen pt-24 flex flex-col items-center justify-center gap-4"
-        style={{
-          background: 'var(--background-gradient, var(--background-color, #232526))',
-          backgroundSize: 'cover',
-          backgroundRepeat: 'no-repeat',
-          backgroundAttachment: 'fixed',
-        }}
-      >
+    <div
+      className="min-h-screen pt-24 flex flex-col items-center justify-center gap-4"
+      style={{
+        background: '#2a2a2a !important',
+        backgroundSize: 'cover',
+        backgroundRepeat: 'no-repeat',
+        backgroundAttachment: 'fixed',
+      }}
+    >
         <div className="text-xl text-secondary">{error || 'القسم الفرعي غير موجود'}</div>
         <Link
           to="/"
@@ -119,7 +119,7 @@ export default function SubcategoryProducts() {
     <div
       className="min-h-screen pt-24"
       style={{
-        background: 'var(--background-gradient, var(--background-color, #232526))',
+        background: '#2a2a2a !important',
         backgroundSize: 'cover',
         backgroundRepeat: 'no-repeat',
         backgroundAttachment: 'fixed',

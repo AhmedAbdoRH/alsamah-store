@@ -70,10 +70,13 @@ export default function LoadingScreen({
 
   return (
     <div
-      className={`fixed inset-0 z-[9999] flex items-center justify-center bg-gradient-to-br from-[#232526] to-[#414345] transition-opacity ease-in-out ${
+      className={`fixed inset-0 z-[9999] flex items-center justify-center transition-opacity ease-in-out ${
         fadeOut ? 'opacity-0 pointer-events-none' : 'opacity-100'
       }`}
-      style={{ transitionDuration: `${FADE_OUT_DURATION_MS}ms` }}
+      style={{ 
+        transitionDuration: `${FADE_OUT_DURATION_MS}ms`,
+        backgroundColor: '#2a2a2a'
+      }}
     >
       {/* Only render logo or custom loader once image loading status is determined */}
       {imageLoaded && (

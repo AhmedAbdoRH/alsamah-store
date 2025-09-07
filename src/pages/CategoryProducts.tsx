@@ -27,15 +27,15 @@ export default function CategoryProducts() {
       // Fetch category details
       const { data: categoryData, error: categoryError } = await supabase
         .from('categories')
-        .select('id, name_ar, description_ar, created_at')
+        .select('id, name, description, created_at')
         .eq('id', categoryId)
         .single();
 
       if (categoryError) throw categoryError;
       setCategory({
         id: categoryData.id,
-        name: categoryData.name_ar,
-        description: categoryData.description_ar,
+        name: categoryData.name,
+        description: categoryData.description,
         created_at: categoryData.created_at
       } as Category);
 
@@ -53,7 +53,7 @@ export default function CategoryProducts() {
         .from('subcategories')
         .select('id, name_ar')
         .eq('category_id', categoryId)
-        .order('display_order', { ascending: true });
+        .order('name_ar', { ascending: true });
       if (!subErr && subcats) {
         setSubcategories(subcats.map((s: any) => ({ id: s.id, name: s.name_ar })));
       } else {
@@ -68,15 +68,15 @@ export default function CategoryProducts() {
 
   if (isLoading) {
     return (
-      <div
-        className="min-h-screen pt-24 flex items-center justify-center"
-        style={{
-          background: 'var(--background-gradient, var(--background-color, #232526))',
-          backgroundSize: 'cover',
-          backgroundRepeat: 'no-repeat',
-          backgroundAttachment: 'fixed',
-        }}
-      >
+    <div
+      className="min-h-screen pt-24 flex items-center justify-center"
+      style={{
+        background: '#2a2a2a !important',
+        backgroundSize: 'cover',
+        backgroundRepeat: 'no-repeat',
+        backgroundAttachment: 'fixed',
+      }}
+    >
         <div className="text-xl text-secondary">جاري التحميل...</div>
       </div>
     );
@@ -84,15 +84,15 @@ export default function CategoryProducts() {
 
   if (error || !category) {
     return (
-      <div
-        className="min-h-screen pt-24 flex flex-col items-center justify-center gap-4"
-        style={{
-          background: 'var(--background-gradient, var(--background-color, #232526))',
-          backgroundSize: 'cover',
-          backgroundRepeat: 'no-repeat',
-          backgroundAttachment: 'fixed',
-        }}
-      >
+    <div
+      className="min-h-screen pt-24 flex flex-col items-center justify-center gap-4"
+      style={{
+        background: '#2a2a2a !important',
+        backgroundSize: 'cover',
+        backgroundRepeat: 'no-repeat',
+        backgroundAttachment: 'fixed',
+      }}
+    >
         <div className="text-xl text-secondary">{error || 'القسم غير موجود'}</div>
         <Link
           to="/"
@@ -108,7 +108,7 @@ export default function CategoryProducts() {
     <div
       className="min-h-screen pt-24"
       style={{
-        background: 'var(--background-gradient, var(--background-color, #232526))',
+        background: '#2a2a2a !important',
         backgroundSize: 'cover',
         backgroundRepeat: 'no-repeat',
         backgroundAttachment: 'fixed',

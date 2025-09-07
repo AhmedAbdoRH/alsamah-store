@@ -62,7 +62,7 @@ export default function Services() {
 
   if (isLoading) {
     return (
-      <div className={`py-16 bg-gradient-to-br from-[${brownDark}] to-black`}>
+      <div className="py-16" style={{backgroundColor: '#2a2a2a'}}>
         <div className="container mx-auto px-4 text-center text-secondary">
      
         </div>
@@ -72,7 +72,7 @@ export default function Services() {
 
   if (error) {
     return (
-      <div className={`py-16 bg-gradient-to-br from-[${brownDark}] to-black`}>
+      <div className="py-16" style={{backgroundColor: '#2a2a2a'}}>
         <div className="container mx-auto px-4 text-center text-red-600">
           حدث خطأ أثناء تحميل المفروشات
         </div>
@@ -81,7 +81,7 @@ export default function Services() {
   }
 
   return (
-    <section className={`py-16 bg-gradient-to-br from-[${brownDark}] to-black`} id="products">
+    <section className="py-16" style={{backgroundColor: '#2a2a2a'}} id="products">
       <div className="container mx-auto px-4
                    bg-white/5
                    backdrop-blur-xl

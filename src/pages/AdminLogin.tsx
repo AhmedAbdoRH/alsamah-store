@@ -58,7 +58,7 @@ export default function AdminLogin() {
 
   return (
     // Apply the dark gradient background to the main container
-    <div className={`min-h-screen bg-gradient-to-br from-[${brownDark}] to-black flex items-center justify-center p-4`}>
+    <div className="min-h-screen flex items-center justify-center p-4" style={{backgroundColor: '#2a2a2a'}}>
       {/* Form container with Glassmorphism style */}
       {/* Replaced solid dark background with transparent background, blur, and subtle border */}
       <div className="bg-white/5 backdrop-blur-xl rounded-2xl p-8 shadow-2xl shadow-black/40 w-full max-w-md border border-white/10 text-gray-200">
