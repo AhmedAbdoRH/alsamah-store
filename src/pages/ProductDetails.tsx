@@ -5,14 +5,8 @@ import type { Service, ProductSize } from '../types/database';
 import { MessageCircle } from 'lucide-react';
 import { useCart } from '../contexts/CartContext';
 import { toast } from 'react-toastify';
+import ProductImageSlider from '../components/ProductImageSlider';
 
-function usePrevious<T>(value: T): T | undefined {
-  const ref = useRef<T>();
-  useEffect(() => {
-    ref.current = value;
-  }, [value]);
-  return ref.current;
-}
 
 export default function ProductDetails() {
   const { id } = useParams<{ id: string }>();
@@ -22,12 +16,7 @@ export default function ProductDetails() {
   const [error, setError] = useState<string | null>(null);
   const [suggested, setSuggested] = useState<Service[]>([]);
 
-  // Image slider states
-  const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  const [currentTransform, setCurrentTransform] = useState('translateX(0)');
-  const [prevTransform, setPrevTransform] = useState('translateX(0)');
-  const [prevImageIndexState, setPrevImageIndexState] = useState<number | null>(null);
-  const [isTransitioning, setIsTransitioning] = useState(false);
+  // Image slider states - removed as we're using ProductImageSlider component
   const { addToCart } = useCart();
   const [selectedSize, setSelectedSize] = useState<ProductSize | null>(null);
 
@@ -40,7 +29,6 @@ export default function ProductDetails() {
   useEffect(() => {
     if (id) {
       fetchService(id);
-      setCurrentImageIndex(0); // Reset image index when product changes
     }
   }, [id]);
 
@@ -102,55 +90,6 @@ export default function ProductDetails() {
     ...(Array.isArray(service?.gallery) ? service.gallery : [])
   ].filter(Boolean);
 
-  // Automatic image cycling for the main product
-  useEffect(() => {
-    if (images.length <= 1) return;
-
-    const interval = setInterval(() => {
-      setCurrentImageIndex((prev) => (prev + 1) % images.length);
-    }, 4500); // 4.5 seconds per image
-
-    return () => clearInterval(interval);
-  }, [images.length]);
-
-  // Image transition effect
-  const previousImageIndex = usePrevious(currentImageIndex);
-
-  useEffect(() => {
-    // Only apply transition if the image actually changed
-    if (previousImageIndex !== undefined && previousImageIndex !== currentImageIndex) {
-      setIsTransitioning(true);
-      setPrevImageIndexState(previousImageIndex); // Store the previous image index
-
-      // Start by positioning the new image to the right and the old image in place
-      setCurrentTransform('translateX(100%)');
-      setPrevTransform('translateX(0)');
-
-      // Use requestAnimationFrame for smoother transition
-      const raf = requestAnimationFrame(() => {
-        setCurrentTransform('translateX(0)'); // New image slides into view
-        setPrevTransform('translateX(-100%)'); // Old image slides out to the left
-      });
-
-      // Cleanup after transition
-      const cleanupTimer = setTimeout(() => {
-        setIsTransitioning(false);
-        setPrevImageIndexState(null); // Remove previous image from DOM after transition
-      }, 1800); // Duration of the transition
-
-      return () => {
-        cancelAnimationFrame(raf);
-        clearTimeout(cleanupTimer);
-      };
-    } else {
-      // Reset transforms if no transition is needed (e.g., initial load or image changed to same image)
-      setCurrentTransform('translateX(0)');
-      setPrevTransform('translateX(0)');
-      setPrevImageIndexState(null);
-      setIsTransitioning(false);
-    }
-  }, [currentImageIndex, previousImageIndex]);
-
 
   // Extracted background styles for reuse
   const backgroundStyles = {
@@ -195,62 +134,10 @@ export default function ProductDetails() {
           <div className="rounded-lg shadow-lg overflow-hidden glass">
             <div className="md:flex">
               <div className="md:w-1/2">
-                <div className="w-full aspect-[4/3] bg-gray-200 relative rounded-t-lg md:rounded-none md:rounded-s-lg overflow-hidden">
-                  {prevImageIndexState !== null && isTransitioning && (
-                    <img
-                      src={images[prevImageIndexState] || '/placeholder-product.jpg'}
-                      alt=""
-                      className="absolute inset-0 w-full h-full object-cover"
-                      style={{
-                        transform: prevTransform,
-                        zIndex: 10, // Ensure previous image is above current initially
-                        transition: isTransitioning
-                          ? 'transform 1800ms cubic-bezier(.4,0,.2,1)'
-                          : 'none',
-                        willChange: 'transform',
-                      }}
-                      draggable={false}
-                      onError={(e) => {
-                        const target = e.target as HTMLImageElement;
-                        target.src = '/placeholder-product.jpg';
-                      }}
-                    />
-                  )}
-                  <img
-                    src={images[currentImageIndex] || '/placeholder-product.jpg'}
-                    alt={service.title}
-                    className="absolute inset-0 w-full h-full object-cover"
-                    style={{
-                      transform: currentTransform,
-                      zIndex: 5, // Ensure current image slides under previous or comes to front
-                      transition: isTransitioning
-                        ? 'transform 1800ms cubic-bezier(.4,0,.2,1)'
-                        : 'none',
-                      willChange: 'transform',
-                    }}
-                    draggable={false}
-                    onError={(e) => {
-                      const target = e.target as HTMLImageElement;
-                      target.src = '/placeholder-product.jpg';
-                    }}
-                  />
-                  {images.length > 1 && (
-                    <>
-                      {/* Image indicators */}
-                      <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-2 z-20">
-                        {images.map((img, idx) => (
-                          <button
-                            key={img + idx}
-                            className={`w-2 h-2 rounded-full border-none transition-colors ease-in-out duration-500 ${ currentImageIndex === idx ? 'bg-white' : 'bg-white/30'}`}
-                            onClick={() => setCurrentImageIndex(idx)}
-                            aria-label={`عرض الصورة رقم ${idx + 1}`}
-                            type="button"
-                          />
-                        ))}
-                      </div>
-                    </>
-                  )}
-                </div>
+                <ProductImageSlider 
+                  mainImageUrl={service.image_url}
+                  additionalImages={Array.isArray(service.gallery) ? service.gallery : []}
+                />
               </div>
               <div className="md:w-1/2 p-8">
                 <h1 className="text-3xl font-bold mb-4 text-secondary text-right">{service.title}</h1>
