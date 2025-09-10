@@ -18,6 +18,7 @@ import CategoryProducts from './pages/CategoryProducts';
 import SubcategoryProducts from './pages/SubcategoryProducts';
 import ProductDetails from './pages/ProductDetails';
 import LoadingScreen from './components/LoadingScreen';
+import StructuredData from './components/StructuredData';
 import type { StoreSettings, Banner } from './types/database';
 import { ThemeProvider } from './theme/ThemeContext';
 
@@ -61,15 +62,32 @@ function App() {
   const [loading, setLoading] = useState(true);
   const [banners, setBanners] = useState<Banner[]>([]);
   const [mainContentLoaded, setMainContentLoaded] = useState(false);
+  const [services, setServices] = useState<any[]>([]);
+  const [categories, setCategories] = useState<any[]>([]);
 
   useEffect(() => {
     let isMounted = true;
     async function initApp() {
       await fetchStoreSettings();
+      
+      // Fetch banners
       const { data: bannersData, error: bannersError } = await supabase
         .from('banners')
         .select('*')
         .order('created_at', { ascending: false });
+
+      // Fetch services for structured data
+      const { data: servicesData, error: servicesError } = await supabase
+        .from('services')
+        .select('*')
+        .limit(10)
+        .order('created_at', { ascending: false });
+
+      // Fetch categories for structured data
+      const { data: categoriesData, error: categoriesError } = await supabase
+        .from('categories')
+        .select('*')
+        .order('name');
 
       if (isMounted) {
         if (bannersError) {
@@ -77,6 +95,20 @@ function App() {
           setBanners([]);
         } else {
           setBanners(bannersData || []);
+        }
+
+        if (servicesError) {
+          console.error("Error fetching services:", servicesError);
+          setServices([]);
+        } else {
+          setServices(servicesData || []);
+        }
+
+        if (categoriesError) {
+          console.error("Error fetching categories:", categoriesError);
+          setCategories([]);
+        } else {
+          setCategories(categoriesData || []);
         }
       }
 
@@ -248,21 +280,54 @@ function App() {
     <ThemeProvider>
       <CartProvider>
         <Helmet>
-          <title>{storeSettings?.meta_title || storeSettings?.store_name || 'معرض السماح للمفروشات'}</title>
-          <meta name="description" content={storeSettings?.meta_description || storeSettings?.store_description || 'أفضل المفروشات والأثاث المنزلي'} />
-          {storeSettings?.keywords && storeSettings.keywords.length > 0 && (
-            <meta name="keywords" content={storeSettings.keywords.join(', ')} />
-          )}
+          <title>{storeSettings?.meta_title || storeSettings?.store_name || 'معرض السماح للمفروشات | أفضل المفروشات والأثاث المنزلي في مصر'}</title>
+          <meta name="description" content={storeSettings?.meta_description || storeSettings?.store_description || 'معرض السماح للمفروشات - نقدم أفضل أنواع المفروشات والأثاث المنزلي بأسعار تنافسية وجودة عالية. أريكة، طاولات، كراسي، غرف نوم، صالونات في بنها وأسنيت كفر شكر.'} />
+          <meta name="keywords" content={storeSettings?.keywords ? storeSettings.keywords.join(', ') : 'معرض السماح للمفروشات, مفروشات, أثاث منزلي, أريكة, طاولات, كراسي, غرف نوم, صالونات, بنها, أسنيت كفر شكر, مصر, أثاث, ديكور, منزل'} />
+          <meta name="author" content="معرض السماح للمفروشات" />
+          <meta name="robots" content="index, follow" />
+          <meta name="language" content="Arabic" />
+          <meta name="revisit-after" content="7 days" />
+          
+          {/* Open Graph / Facebook */}
+          <meta property="og:type" content="website" />
+          <meta property="og:url" content="https://perfume-ambassador.com/" />
+          <meta property="og:title" content={storeSettings?.meta_title || storeSettings?.store_name || 'معرض السماح للمفروشات | أفضل المفروشات والأثاث المنزلي في مصر'} />
+          <meta property="og:description" content={storeSettings?.meta_description || storeSettings?.store_description || 'معرض السماح للمفروشات - نقدم أفضل أنواع المفروشات والأثاث المنزلي بأسعار تنافسية وجودة عالية. أريكة، طاولات، كراسي، غرف نوم، صالونات في بنها وأسنيت كفر شكر.'} />
+          <meta property="og:image" content={storeSettings?.og_image_url || 'https://perfume-ambassador.com/logo.png'} />
+          <meta property="og:image:width" content="1200" />
+          <meta property="og:image:height" content="630" />
+          <meta property="og:site_name" content="معرض السماح للمفروشات" />
+          <meta property="og:locale" content="ar_EG" />
+          
+          {/* Twitter */}
+          <meta property="twitter:card" content="summary_large_image" />
+          <meta property="twitter:url" content="https://perfume-ambassador.com/" />
+          <meta property="twitter:title" content={storeSettings?.meta_title || storeSettings?.store_name || 'معرض السماح للمفروشات | أفضل المفروشات والأثاث المنزلي في مصر'} />
+          <meta property="twitter:description" content={storeSettings?.meta_description || storeSettings?.store_description || 'معرض السماح للمفروشات - نقدم أفضل أنواع المفروشات والأثاث المنزلي بأسعار تنافسية وجودة عالية. أريكة، طاولات، كراسي، غرف نوم، صالونات في بنها وأسنيت كفر شكر.'} />
+          <meta property="twitter:image" content={storeSettings?.og_image_url || 'https://perfume-ambassador.com/logo.png'} />
+          
+          {/* Additional SEO Meta Tags */}
+          <meta name="geo.region" content="EG" />
+          <meta name="geo.placename" content="Egypt" />
+          <meta name="geo.position" content="30.0444;31.2357" />
+          <meta name="ICBM" content="30.0444, 31.2357" />
+          
+          {/* Canonical URL */}
+          <link rel="canonical" href="https://perfume-ambassador.com/" />
+          
+          {/* Favicon */}
           {storeSettings?.favicon_url && (
             <link rel="icon" href={storeSettings.favicon_url} />
           )}
-          {storeSettings?.og_image_url && (
-            <meta property="og:image" content={storeSettings.og_image_url} />
-          )}
-          <meta property="og:title" content={storeSettings?.meta_title || storeSettings?.store_name || ''} />
-          <meta property="og:description" content={storeSettings?.meta_description || storeSettings?.store_description || ''} />
-          <meta property="og:type" content="website" />
         </Helmet>
+        
+        {/* Structured Data */}
+        <StructuredData 
+          type="organization" 
+          data={storeSettings} 
+          services={services}
+          categories={categories}
+        />
         <Router>
           <Routes>
             <Route path="/admin/login" element={<AdminLogin />} />

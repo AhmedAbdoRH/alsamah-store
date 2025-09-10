@@ -151,26 +151,52 @@ export default function Services() {
           visible: { opacity: 1, y: 0, transition: { duration: 0.8, delayChildren: 0.3, staggerChildren: 0.2 } },
         }}
       >
-        {/* العنوان */}
-        <motion.h2
-          className={`text-3xl font-bold text-center mb-12 text-[${lightGold}]`}
+        {/* العنوان المحسن للSEO */}
+        <motion.div
+          className="text-center mb-12"
           variants={{
             hidden: { opacity: 0, y: -30 },
             visible: { opacity: 1, y: 0 },
           }}
           transition={{ duration: 0.6, ease: 'easeOut' }}
         >
-          {selectedSubcategory ? (
-            <>
-              {subcategories.find(sc => sc.id === selectedSubcategory)?.name} - 
-              {categories.find(c => c.id === selectedCategory)?.name}
-            </>
-          ) : selectedCategory ? (
-            categories.find(c => c.id === selectedCategory)?.name || 'منتجاتنا'
-          ) : (
-            'منتجاتنا'
-          )}
-        </motion.h2>
+          <h2 className={`text-3xl font-bold mb-4 text-[${lightGold}]`}>
+            {selectedSubcategory ? (
+              <>
+                {subcategories.find(sc => sc.id === selectedSubcategory)?.name} - 
+                {categories.find(c => c.id === selectedCategory)?.name}
+              </>
+            ) : selectedCategory ? (
+              categories.find(c => c.id === selectedCategory)?.name || 'منتجاتنا'
+            ) : (
+              'منتجاتنا'
+            )}
+          </h2>
+          
+          {/* SEO-optimized description */}
+          <div className="max-w-3xl mx-auto text-white/80 text-lg leading-relaxed">
+            {selectedSubcategory ? (
+              <p>
+                اكتشف مجموعة واسعة من <strong>{subcategories.find(sc => sc.id === selectedSubcategory)?.name}</strong> 
+                في قسم <strong>{categories.find(c => c.id === selectedCategory)?.name}</strong> من 
+                <strong> معرض السماح للمفروشات</strong>. نقدم أفضل أنواع المفروشات والأثاث المنزلي 
+                بأسعار تنافسية وجودة عالية.
+              </p>
+            ) : selectedCategory ? (
+              <p>
+                تصفح مجموعة متنوعة من <strong>{categories.find(c => c.id === selectedCategory)?.name}</strong> 
+                من <strong>معرض السماح للمفروشات</strong>. أريكة، طاولات، كراسي، غرف نوم، 
+                صالونات وأكثر بأسعار مناسبة وجودة مضمونة.
+              </p>
+            ) : (
+              <p>
+                مرحباً بكم في <strong>معرض السماح للمفروشات</strong> - وجهتكم الأولى للحصول على 
+                <strong> أفضل المفروشات والأثاث المنزلي</strong> في مصر. اكتشف مجموعتنا الواسعة من 
+                الأريكة والطاولات والكراسي وغرف النوم والصالونات بأسعار تنافسية وجودة عالية.
+              </p>
+            )}
+          </div>
+        </motion.div>
 
         {/* Special Categories */}
         <motion.div
