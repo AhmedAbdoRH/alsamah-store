@@ -160,7 +160,7 @@ export default function Services() {
           }}
           transition={{ duration: 0.6, ease: 'easeOut' }}
         >
-          <h2 className={`text-3xl font-bold mb-4 text-[${lightGold}]`}>
+          <h2 className="text-3xl font-bold mb-4 text-[#FFD700]">
             {selectedSubcategory ? (
               <>
                 {subcategories.find(sc => sc.id === selectedSubcategory)?.name} - 
@@ -213,11 +213,11 @@ export default function Services() {
               setSelectedSubcategory(null);
               setOpenCategoryId(null);
             }}
-            className={`p-4 rounded-xl transition-all duration-300 ${
-              !selectedCategory
-                ? `bg-[var(--color-secondary,#34C759)] text-black font-bold shadow-md`
-                : 'bg-black/20 text-white hover:bg-black/30 hover:shadow-md'
-            }`}
+              className={`p-4 rounded-xl transition-all duration-300 ${
+                !selectedCategory
+                  ? 'bg-green-500 text-black font-bold shadow-md'
+                  : 'bg-black/20 text-white hover:bg-black/30 hover:shadow-md'
+              }`}
             variants={{
               hidden: { opacity: 0, y: 20 },
               visible: { opacity: 1, y: 0 },
@@ -236,7 +236,7 @@ export default function Services() {
               }}
               className={`p-4 rounded-xl transition-all duration-300 ${
                 selectedCategory === 'featured'
-                  ? `bg-[var(--color-secondary,#FFD700)] text-black font-bold shadow-md`
+                  ? 'bg-yellow-500 text-black font-bold shadow-md'
                   : 'bg-yellow-500/20 text-yellow-300 hover:bg-yellow-500/30 hover:shadow-md'
               }`}
               variants={{
@@ -260,7 +260,7 @@ export default function Services() {
               }}
               className={`p-4 rounded-xl transition-all duration-300 ${
                 selectedCategory === 'best_sellers'
-                  ? `bg-[var(--color-secondary,#FF6B6B)] text-black font-bold shadow-md`
+                  ? 'bg-red-500 text-black font-bold shadow-md'
                   : 'bg-red-500/20 text-red-300 hover:bg-red-500/30 hover:shadow-md'
               }`}
               variants={{
@@ -290,7 +290,7 @@ export default function Services() {
                 onClick={() => handleCategoryClick(category.id)}
                 className={`p-4 rounded-xl transition-all duration-300 ${
                   category.id === selectedCategory
-                    ? `bg-[var(--color-secondary,#34C759)] text-black font-bold shadow-md`
+                    ? 'bg-green-500 text-black font-bold shadow-md'
                     : 'bg-black/20 text-white hover:bg-black/30 hover:shadow-md'
                 }`}
                 variants={{
@@ -318,7 +318,7 @@ export default function Services() {
                 onClick={() => handleSubcategoryClick(null)}
                 className={`px-6 py-2 rounded-full text-sm font-semibold transition-all duration-300 transform hover:scale-105 ${
                   selectedSubcategory === null
-                    ? 'bg-gradient-to-r from-[var(--color-secondary,#34C759)] to-[var(--color-accent,#FFD700)] text-black shadow-xl'
+                    ? 'bg-gradient-to-r from-green-500 to-yellow-500 text-black shadow-xl'
                     : 'bg-white/10 text-white border-2 border-white/20 hover:bg-white/20 hover:border-white/40 hover:shadow-lg'
                 }`}
                 initial={{ opacity: 0, scale: 0.8 }}
@@ -340,7 +340,7 @@ export default function Services() {
                       onClick={() => handleSubcategoryClick(subcategory.id)}
                       className={`px-6 py-2 rounded-full text-sm font-semibold transition-all duration-300 transform hover:scale-105 ${
                         selectedSubcategory === subcategory.id
-                          ? 'bg-gradient-to-r from-[var(--color-secondary,#34C759)] to-[var(--color-accent,#FFD700)] text-black shadow-xl'
+                          ? 'bg-gradient-to-r from-green-500 to-yellow-500 text-black shadow-xl'
                           : 'bg-white/10 text-white border-2 border-white/20 hover:bg-white/20 hover:border-white/40 hover:shadow-lg'
                       }`}
                       initial={{ opacity: 0, scale: 0.8 }}
