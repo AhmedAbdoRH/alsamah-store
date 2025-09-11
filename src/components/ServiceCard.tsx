@@ -187,10 +187,10 @@ export default function ProductCard({ title, description, imageUrl, price, saleP
             {has_multiple_sizes && (displayPrice || displaySalePrice) ? (
               <>
                 <div className="flex items-center gap-1">
-                  <span className={`font-bold text-lg text-[#FFD700]`}>
+                  <span className={`font-bold text-lg sm:text-xl text-[#FFD700]`}>
                     {displaySalePrice || displayPrice}
                   </span>
-                  <span className={`font-bold text-lg text-[#FFD700]`}>ج</span>
+                  <span className={`font-bold text-lg sm:text-xl text-[#FFD700]`}>ج</span>
                 </div>
                 {pricingStrategy === 'smart-fallback' ? (
                   <span className="text-xs text-yellow-400">سعر تقديري</span>
@@ -203,8 +203,8 @@ export default function ProductCard({ title, description, imageUrl, price, saleP
             ) : displaySalePrice ? (
               <>
                 <div className="flex items-center gap-1">
-                  <span className={`font-bold text-lg text-[#FFD700]`}>{displaySalePrice}</span>
-                  <span className={`font-bold text-lg text-[#FFD700]`}>ج</span>
+                  <span className={`font-bold text-lg sm:text-xl text-[#FFD700]`}>{displaySalePrice}</span>
+                  <span className={`font-bold text-lg sm:text-xl text-[#FFD700]`}>ج</span>
                 </div>
                 {displayPrice && (
                   <div className="flex items-center gap-1">
@@ -216,8 +216,8 @@ export default function ProductCard({ title, description, imageUrl, price, saleP
             ) : displayPrice ? (
               <>
                 <div className="flex items-center gap-1">
-                  <span className={`font-bold text-lg text-[#FFD700]`}>{displayPrice}</span>
-                  <span className={`font-bold text-lg text-[#FFD700]`}>ج</span>
+                  <span className={`font-bold text-lg sm:text-xl text-[#FFD700]`}>{displayPrice}</span>
+                  <span className={`font-bold text-lg sm:text-xl text-[#FFD700]`}>ج</span>
                 </div>
                 {pricingStrategy === 'smart-fallback' && (
                   <span className="text-xs text-yellow-400">سعر تقديري</span>
