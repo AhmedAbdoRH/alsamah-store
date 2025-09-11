@@ -52,7 +52,10 @@ const ProductCardDirect = ({ service }: { service: Service }) => {
               if (minSalePrice && maxSalePrice) {
                 return (
                   <>
-                    <span className={`text-lg text-[${lightGold}]`}>{minSalePrice} ج</span>
+                    <div className="flex items-center gap-1">
+                      <span className={`text-lg text-[#FFD700]`}>{minSalePrice}</span>
+                      <span className={`text-lg text-[#FFD700]`}>ج</span>
+                    </div>
                     {minSalePrice !== maxSalePrice && (
                       <span className="text-xs text-gray-400">يبدأ من</span>
                     )}
@@ -61,7 +64,10 @@ const ProductCardDirect = ({ service }: { service: Service }) => {
               } else if (minPrice && maxPrice) {
                 return (
                   <>
-                    <span className={`text-lg text-[${lightGold}]`}>{minPrice} ج</span>
+                    <div className="flex items-center gap-1">
+                      <span className={`text-lg text-[#FFD700]`}>{minPrice}</span>
+                      <span className={`text-lg text-[#FFD700]`}>ج</span>
+                    </div>
                     {minPrice !== maxPrice && (
                       <span className="text-xs text-gray-400">يبدأ من</span>
                     )}
@@ -87,7 +93,10 @@ const ProductCardDirect = ({ service }: { service: Service }) => {
                 const smartPrice = generateSmartPricing(service.title);
                 return (
                   <>
-                    <span className={`text-lg text-[${lightGold}]`}>{smartPrice} ج</span>
+                    <div className="flex items-center gap-1">
+                      <span className={`text-lg text-[#FFD700]`}>{smartPrice}</span>
+                      <span className={`text-lg text-[#FFD700]`}>ج</span>
+                    </div>
                     <span className="text-xs text-yellow-400">سعر تقديري</span>
                   </>
                 );
@@ -95,11 +104,20 @@ const ProductCardDirect = ({ service }: { service: Service }) => {
             })()
           ) : service.sale_price ? (
             <>
-              <span className={`text-lg text-[${lightGold}]`}>{service.sale_price} ج</span>
-              <span className="text-sm text-gray-400 line-through">{service.price} ج</span>
+              <div className="flex items-center gap-1">
+                <span className={`text-lg text-[#FFD700]`}>{service.sale_price}</span>
+                <span className={`text-lg text-[#FFD700]`}>ج</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <span className="text-sm text-gray-400 line-through">{service.price}</span>
+                <span className="text-sm text-gray-400 line-through">ج</span>
+              </div>
             </>
           ) : service.price ? (
-            <span className={`text-lg text-[${lightGold}]`}>{service.price} ج</span>
+            <div className="flex items-center gap-1">
+              <span className={`text-lg text-[#FFD700]`}>{service.price}</span>
+              <span className={`text-lg text-[#FFD700]`}>ج</span>
+            </div>
           ) : (
             (() => {
               // Smart fallback pricing for single price products
@@ -121,7 +139,10 @@ const ProductCardDirect = ({ service }: { service: Service }) => {
               const smartPrice = generateSmartPricing(service.title);
               return (
                 <>
-                  <span className={`text-lg text-[${lightGold}]`}>{smartPrice} ج</span>
+                  <div className="flex items-center gap-1">
+                    <span className={`text-lg text-[#FFD700]`}>{smartPrice}</span>
+                    <span className={`text-lg text-[#FFD700]`}>ج</span>
+                  </div>
                   <span className="text-xs text-yellow-400">سعر تقديري</span>
                 </>
               );
@@ -216,7 +237,7 @@ export default function Products() {
         variants={{ hidden: {}, visible: { transition: { staggerChildren: 0.11 } } }}
       >
         <motion.h2
-          className={`text-3xl font-bold text-center mb-12 text-[${lightGold}]`}
+          className={`text-3xl font-bold text-center mb-12 text-[#FFD700]`}
           initial={{ opacity: 0, y: -32 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.35, ease: 'easeOut' }}

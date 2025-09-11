@@ -176,7 +176,7 @@ export default function ProductCard({ title, description, imageUrl, price, saleP
         <div className="p-6">
           <h3 className="text-xl font-bold mb-2 text-secondary flex items-center gap-2">
             {title}
-            <Sparkles className={`h-4 w-4 text-[${lightGold}]`} />
+            <Sparkles className={`h-4 w-4 text-[#FFD700]`} />
           </h3>
         </div>
       </Link>
@@ -186,9 +186,12 @@ export default function ProductCard({ title, description, imageUrl, price, saleP
           <div className="flex flex-col items-end">
             {has_multiple_sizes && (displayPrice || displaySalePrice) ? (
               <>
-                <span className={`font-bold text-lg text-[${lightGold}]`}>
-                  {displaySalePrice || displayPrice} ج
-                </span>
+                <div className="flex items-center gap-1">
+                  <span className={`font-bold text-lg text-[#FFD700]`}>
+                    {displaySalePrice || displayPrice}
+                  </span>
+                  <span className={`font-bold text-lg text-[#FFD700]`}>ج</span>
+                </div>
                 {pricingStrategy === 'smart-fallback' ? (
                   <span className="text-xs text-yellow-400">سعر تقديري</span>
                 ) : hasMultiplePrices ? (
@@ -199,14 +202,23 @@ export default function ProductCard({ title, description, imageUrl, price, saleP
               </>
             ) : displaySalePrice ? (
               <>
-                <span className={`font-bold text-lg text-[${lightGold}]`}>{displaySalePrice} ج</span>
+                <div className="flex items-center gap-1">
+                  <span className={`font-bold text-lg text-[#FFD700]`}>{displaySalePrice}</span>
+                  <span className={`font-bold text-lg text-[#FFD700]`}>ج</span>
+                </div>
                 {displayPrice && (
-                  <span className="text-sm text-gray-400 line-through">{displayPrice} ج</span>
+                  <div className="flex items-center gap-1">
+                    <span className="text-sm text-gray-400 line-through">{displayPrice}</span>
+                    <span className="text-sm text-gray-400 line-through">ج</span>
+                  </div>
                 )}
               </>
             ) : displayPrice ? (
               <>
-                <span className={`font-bold text-lg text-[${lightGold}]`}>{displayPrice} ج</span>
+                <div className="flex items-center gap-1">
+                  <span className={`font-bold text-lg text-[#FFD700]`}>{displayPrice}</span>
+                  <span className={`font-bold text-lg text-[#FFD700]`}>ج</span>
+                </div>
                 {pricingStrategy === 'smart-fallback' && (
                   <span className="text-xs text-yellow-400">سعر تقديري</span>
                 )}
