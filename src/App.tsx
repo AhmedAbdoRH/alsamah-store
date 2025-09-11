@@ -17,6 +17,8 @@ import ServiceDetails from './pages/ServiceDetails';
 import CategoryProducts from './pages/CategoryProducts';
 import SubcategoryProducts from './pages/SubcategoryProducts';
 import ProductDetails from './pages/ProductDetails';
+import AboutUs from './pages/AboutUs';
+import ContactUs from './pages/ContactUs';
 import LoadingScreen from './components/LoadingScreen';
 import StructuredData from './components/StructuredData';
 import type { StoreSettings, Banner } from './types/database';
@@ -355,6 +357,16 @@ function App() {
             <Route path="/subcategory/:subcategoryId" element={
               <Layout banners={banners}>
                 <SubcategoryProducts />
+              </Layout>
+            } />
+            <Route path="/about" element={
+              <Layout banners={banners}>
+                <AboutUs />
+              </Layout>
+            } />
+            <Route path="/contact" element={
+              <Layout banners={banners}>
+                <ContactUs />
               </Layout>
             } />
             <Route path="/" element={
