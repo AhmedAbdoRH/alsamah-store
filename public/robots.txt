@@ -2,7 +2,7 @@ User-agent: *
 Allow: /
 
 # Sitemap
-Sitemap: https://perfume-ambassador.com/sitemap.xml
+Sitemap: https://alsamah-store.com/sitemap.xml
 
 # Crawl-delay for better server performance
 Crawl-delay: 1
@@ -19,11 +19,10 @@ Allow: /service/
 Allow: /category/
 Allow: /subcategory/
 
-# Block unnecessary files
-Disallow: /*.json$
-Disallow: /*.js$
-Disallow: /*.css$
-Disallow: /*.map$
+# Allow essential assets for rendering
+Allow: /*.js$
+Allow: /*.css$
+Allow: /*.map$
 
 # Allow images and assets
 Allow: /logo.png

@@ -23,7 +23,7 @@ export default function SitemapGenerator({ onSitemapGenerated }: SitemapGenerato
       const categories = categoriesResult.data || [];
       const subcategories = subcategoriesResult.data || [];
 
-      const baseUrl = 'https://perfume-ambassador.com';
+      const baseUrl = 'https://alsamah-store.com';
       const currentDate = new Date().toISOString();
 
       // Generate sitemap XML

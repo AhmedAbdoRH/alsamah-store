@@ -292,10 +292,10 @@ function App() {
           
           {/* Open Graph / Facebook */}
           <meta property="og:type" content="website" />
-          <meta property="og:url" content="https://perfume-ambassador.com/" />
+          <meta property="og:url" content="https://alsamah-store.com/" />
           <meta property="og:title" content={storeSettings?.meta_title || storeSettings?.store_name || 'معرض السماح للمفروشات | أفضل المفروشات والأثاث المنزلي في مصر'} />
           <meta property="og:description" content={storeSettings?.meta_description || storeSettings?.store_description || 'معرض السماح للمفروشات - نقدم أفضل أنواع المفروشات والأثاث المنزلي بأسعار تنافسية وجودة عالية. أريكة، طاولات، كراسي، غرف نوم، صالونات في بنها وأسنيت كفر شكر.'} />
-          <meta property="og:image" content={storeSettings?.og_image_url || 'https://perfume-ambassador.com/logo.png'} />
+          <meta property="og:image" content={storeSettings?.og_image_url || 'https://alsamah-store.com/logo.png'} />
           <meta property="og:image:width" content="1200" />
           <meta property="og:image:height" content="630" />
           <meta property="og:site_name" content="معرض السماح للمفروشات" />
@@ -303,10 +303,10 @@ function App() {
           
           {/* Twitter */}
           <meta property="twitter:card" content="summary_large_image" />
-          <meta property="twitter:url" content="https://perfume-ambassador.com/" />
+          <meta property="twitter:url" content="https://alsamah-store.com/" />
           <meta property="twitter:title" content={storeSettings?.meta_title || storeSettings?.store_name || 'معرض السماح للمفروشات | أفضل المفروشات والأثاث المنزلي في مصر'} />
           <meta property="twitter:description" content={storeSettings?.meta_description || storeSettings?.store_description || 'معرض السماح للمفروشات - نقدم أفضل أنواع المفروشات والأثاث المنزلي بأسعار تنافسية وجودة عالية. أريكة، طاولات، كراسي، غرف نوم، صالونات في بنها وأسنيت كفر شكر.'} />
-          <meta property="twitter:image" content={storeSettings?.og_image_url || 'https://perfume-ambassador.com/logo.png'} />
+          <meta property="twitter:image" content={storeSettings?.og_image_url || 'https://alsamah-store.com/logo.png'} />
           
           {/* Additional SEO Meta Tags */}
           <meta name="geo.region" content="EG" />
@@ -315,7 +315,7 @@ function App() {
           <meta name="ICBM" content="30.0444, 31.2357" />
           
           {/* Canonical URL */}
-          <link rel="canonical" href="https://perfume-ambassador.com/" />
+          <link rel="canonical" href="https://alsamah-store.com/" />
           
           {/* Favicon */}
           {storeSettings?.favicon_url && (

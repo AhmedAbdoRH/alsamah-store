@@ -11,7 +11,7 @@ interface StructuredDataProps {
 
 export default function StructuredData({ type, data, services, categories, breadcrumbs }: StructuredDataProps) {
   const generateStructuredData = () => {
-    const baseUrl = 'https://perfume-ambassador.com';
+    const baseUrl = 'https://alsamah-store.com';
     
     switch (type) {
       case 'organization':

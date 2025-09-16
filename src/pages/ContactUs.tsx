@@ -9,7 +9,7 @@ export default function ContactUs() {
         <title>اتصل بنا - معرض السماح للمفروشات | بنها وأسنيت كفر شكر</title>
         <meta name="description" content="تواصل مع معرض السماح للمفروشات - فرع بنها: 01222582955، فرع أسنيت كفر شكر: 01013210146. نقدم أفضل المفروشات والأثاث المنزلي في مصر." />
         <meta name="keywords" content="اتصل بنا, معرض السماح للمفروشات, بنها, أسنيت كفر شكر, هاتف, واتساب, مفروشات, أثاث منزلي" />
-        <link rel="canonical" href="https://perfume-ambassador.com/contact" />
+        <link rel="canonical" href="https://alsamah-store.com/contact" />
       </Helmet>
 
       <div className="min-h-screen bg-gradient-to-br from-gray-900 via-black to-gray-800 py-16">

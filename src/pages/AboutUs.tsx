@@ -9,7 +9,7 @@ export default function AboutUs() {
         <title>من نحن - معرض السماح للمفروشات | أفضل المفروشات والأثاث المنزلي في مصر</title>
         <meta name="description" content="معرض السماح للمفروشات - تأسس عام 1999 بخبرة أكثر من 25 سنة في مجال المفروشات والأثاث المنزلي. نقدم أفضل الأريكة والطاولات والكراسي وغرف النوم والصالونات في بنها وأسنيت كفر شكر." />
         <meta name="keywords" content="من نحن, معرض السماح للمفروشات, تاريخ الشركة, خبرة 25 سنة, مفروشات بنها, أثاث أسنيت كفر شكر, أريكة, طاولات, كراسي, غرف نوم, صالونات" />
-        <link rel="canonical" href="https://perfume-ambassador.com/about" />
+        <link rel="canonical" href="https://alsamah-store.com/about" />
       </Helmet>
 
       <div className="min-h-screen bg-gradient-to-br from-gray-900 via-black to-gray-800 py-16">

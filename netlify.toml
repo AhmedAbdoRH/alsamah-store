@@ -60,7 +60,7 @@
 # Prerender.io integration with token-based authentication
 [[redirects]]
   from = "/*"
-  to = "https://service.prerender.io/https://perfume-ambassador.com/:splat"
+  to = "https://service.prerender.io/https://alsamah-store.com/:splat"
   status = 200
   force = false
   headers = {X-Prerender-Token = "V85u5WS8kbxdXKCF5KuR"}
@@ -74,7 +74,7 @@
 
 # Redirect www to non-www
 [[redirects]]
-  from = "https://www.perfume-ambassador.com/*"
-  to = "https://perfume-ambassador.com/:splat"
+  from = "https://www.alsamah-store.com/*"
+  to = "https://alsamah-store.com/:splat"
   status = 301
   force = true

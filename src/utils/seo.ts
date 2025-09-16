@@ -112,7 +112,7 @@ export const generateOrganizationStructuredData = (storeSettings: any) => {
     "@type": "Organization",
     "name": storeSettings?.store_name || "معرض السماح للمفروشات",
     "description": storeSettings?.store_description || "أفضل المفروشات والأثاث المنزلي في مصر",
-    "url": "https://perfume-ambassador.com",
+    "url": "https://alsamah-store.com",
     "logo": storeSettings?.logo_url || "/logo.png",
     "address": [
       {

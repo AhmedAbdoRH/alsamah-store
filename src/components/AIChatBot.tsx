@@ -116,7 +116,7 @@ export default function AIChatBot() {
         if (products.length > 0) {
             context += `المنتجات المتاحة في المعرض:\n`;
             products.forEach(product => {
-                const productUrl = `https://perfume-ambassador.com/product/${product.id}`;
+                const productUrl = `https://alsamah-store.com/product/${product.id}`;
                 context += `\n--- ${product.title} ---\n`;
                 context += `الوصف: ${product.description || 'لا يوجد وصف متاح'}\n`;
                 
