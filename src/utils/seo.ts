@@ -113,7 +113,7 @@ export const generateOrganizationStructuredData = (storeSettings: any) => {
     "name": storeSettings?.store_name || "معرض السماح للمفروشات",
     "description": storeSettings?.store_description || "أفضل المفروشات والأثاث المنزلي في مصر",
     "url": "https://alsamah-store.com",
-    "logo": storeSettings?.logo_url || "/logo.png",
+    "logo": storeSettings?.logo_url || "/favicon.png",
     "address": [
       {
         "@type": "PostalAddress",

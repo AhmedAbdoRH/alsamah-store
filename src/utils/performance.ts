@@ -50,6 +50,7 @@ export const throttle = <T extends (...args: any[]) => any>(
 // Preload critical resources
 export const preloadCriticalResources = () => {
   const criticalImages = [
+    '/favicon.png',
     '/logo.png',
     '/logo.svg'
   ];
