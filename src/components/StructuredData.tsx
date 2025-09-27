@@ -23,7 +23,7 @@ export default function StructuredData({ type, data, services, categories, bread
           "description": storeSettings?.store_description || "أفضل المفروشات والأثاث المنزلي في مصر",
           "url": baseUrl,
           "logo": storeSettings?.logo_url ? `${baseUrl}${storeSettings.logo_url}` : `${baseUrl}/logo.png`,
-          "image": storeSettings?.og_image_url ? `${baseUrl}${storeSettings.og_image_url}` : `${baseUrl}/logo.png`,
+          "image": storeSettings?.og_image_url ? `${baseUrl}${storeSettings.og_image_url}` : `${baseUrl}/logo-social.png`,
           "address": [
             {
               "@type": "PostalAddress",

@@ -27,6 +27,8 @@ Allow: /*.map$
 # Allow images and assets
 Allow: /logo.png
 Allow: /logo.svg
+Allow: /logo-social.png
+Allow: /logo%20black.png
 Allow: /*.jpg$
 Allow: /*.jpeg$
 Allow: /*.png$
