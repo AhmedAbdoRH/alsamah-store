@@ -1,4 +1,5 @@
 import { useEffect, useState, useRef } from 'react';
+import { Helmet } from 'react-helmet-async';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import type { Service, ProductSize } from '../types/database';
@@ -90,6 +91,15 @@ export default function ProductDetails() {
     ...(Array.isArray(service?.gallery) ? service.gallery : [])
   ].filter(Boolean);
 
+  // Ensure image URLs are absolute for social crawlers
+  const toAbsoluteUrl = (url: string) => {
+    if (!url) return '';
+    if (url.startsWith('http://') || url.startsWith('https://')) return url;
+    if (url.startsWith('/')) return window.location.origin + url;
+    return url;
+  };
+  const productImageForShare = toAbsoluteUrl(images[0] || '/logo-social.png');
+
 
   // Extracted background styles for reuse
   const backgroundStyles = {
@@ -129,6 +139,32 @@ export default function ProductDetails() {
 
   return (
     <div className="min-h-screen flex flex-col pt-24 relative" style={backgroundStyles}>
+      {service && (
+        <Helmet>
+          <title>{`${service.title} | معرض السماح للمفروشات`}</title>
+          <meta
+            name="description"
+            content={(service.description || '').slice(0, 160)}
+          />
+          <link rel="canonical" href={window.location.href} />
+
+          {/* Open Graph */}
+          <meta property="og:type" content="product" />
+          <meta property="og:url" content={window.location.href} />
+          <meta property="og:title" content={`${service.title} | معرض السماح للمفروشات`} />
+          <meta property="og:description" content={(service.description || '').slice(0, 200)} />
+          <meta property="og:image" content={productImageForShare} />
+          <meta property="og:site_name" content="معرض السماح للمفروشات" />
+          <meta property="og:locale" content="ar_EG" />
+
+          {/* Twitter */}
+          <meta property="twitter:card" content="summary_large_image" />
+          <meta property="twitter:url" content={window.location.href} />
+          <meta property="twitter:title" content={`${service.title} | معرض السماح للمفروشات`} />
+          <meta property="twitter:description" content={(service.description || '').slice(0, 200)} />
+          <meta property="twitter:image" content={productImageForShare} />
+        </Helmet>
+      )}
       <div className="flex items-center justify-center flex-grow py-8">
         <div className="container mx-auto px-4 max-w-4xl lg:max-w-5xl">
           <div className="rounded-lg shadow-lg overflow-hidden glass">
