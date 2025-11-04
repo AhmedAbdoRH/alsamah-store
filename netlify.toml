@@ -57,14 +57,7 @@
   [headers.values]
     X-Robots-Tag = "noindex, nofollow"
 
-# Prerender.io integration with token-based authentication
-[[redirects]]
-  from = "/*"
-  to = "https://service.prerender.io/https://alsamah-store.com/:splat"
-  status = 200
-  force = false
-  headers = {X-Prerender-Token = "V85u5WS8kbxdXKCF5KuR"}
-  conditions = {User-Agent = ["Googlebot", "Bingbot", "Yandex", "DuckDuckBot", "Baiduspider", "facebookexternalhit", "twitterbot", "rogerbot", "linkedinbot", "embedly", "quora link preview", "showyoubot", "outbrain", "pinterest", "slackbot", "vkShare", "W3C_Validator", "WhatsApp", "TelegramBot", "Discordbot", "Applebot", "Instagram", "Google-InspectionTool"]}
+# Prerender.io integration is defined via public/_redirects to ensure proper header forwarding and UA conditions.
 
 # SPA routing - fallback for regular users
 [[redirects]]
