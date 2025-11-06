@@ -116,11 +116,38 @@ curl.exe -A "Prerender" "https://alsamah-store.com/" -I
 
 يمكنك العثور على أحدث عناوين IP من: https://prerender.io/documentation/install-netlify
 
+## الفرق بين Prerender.io و Netlify Prerendering
+
+### Prerender.io (ما أعددناه):
+- خدمة خارجية متخصصة
+- تحكم أكبر في الإعدادات
+- دعم أفضل للـ SEO
+- يتطلب Edge Function (تم إعداده)
+
+### Netlify Prerendering (المدمج):
+- خدمة مدمجة في Netlify (Beta)
+- أسهل في الإعداد (فقط اضغط Configure)
+- محدود في الميزات
+- لا يحتاج إعدادات إضافية
+
+## اختيار الحل المناسب
+
+### إذا كنت تريد استخدام Prerender.io (الحل الحالي):
+- **لا تفعل** Netlify Prerendering
+- استمر مع Edge Function الذي أعددناه
+- بعد النشر، اختبر من Prerender.io Dashboard
+
+### إذا كنت تريد استخدام Netlify Prerendering (أسهل):
+1. اضغط **"Configure"** في قسم Prerendering
+2. اتبع التعليمات
+3. **احذف** Edge Function الذي أعددناه (لن تحتاجه)
+
 ## ملاحظات مهمة
 
+- **لا تستخدم الاثنين معاً** - اختر واحد فقط
 - Edge Functions تعمل في جميع خطط Netlify (حتى المجانية)
+- Netlify Prerendering متاح في جميع الخطط أيضاً
 - التكامل يعمل تلقائياً بعد النشر
-- لا حاجة لإعدادات إضافية في Netlify Dashboard (بعد النشر الأول)
 
 ## الدعم
 
