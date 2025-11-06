@@ -12,16 +12,57 @@
 
 ## الخطوات المطلوبة في Netlify Dashboard
 
-### 1. التحقق من أن Edge Functions مفعلة
+### 1. الوصول إلى Functions tab
 
-- اذهب إلى **Site settings** في Netlify
-- تأكد من أن **Edge Functions** مفعلة (متاحة في جميع الخطط)
+**المشكلة:** Functions tab غير موجود مباشرة في القائمة الجانبية!
 
-### 2. إعادة نشر الموقع
+**الطرق للوصول إلى Functions:**
 
-بعد رفع التغييرات، يجب أن ترى Edge Function في:
-- **Functions** tab في Netlify Dashboard
-- يجب أن تظهر `prerender` في قائمة Edge Functions
+#### الطريقة الأولى: من Project overview
+1. اضغط على **"Project overview"** (المحدد حالياً في القائمة)
+2. في الصفحة الرئيسية، ابحث عن تبويبات في الأعلى أو في المحتوى:
+   - قد تجد **"Functions"** كتبويب علوي
+   - أو في قسم **"Functions & Edge Functions"**
+
+#### الطريقة الثانية: من Project configuration
+1. اضغط على **"Project configuration"** من القائمة الجانبية
+2. ابحث عن **"Functions"** أو **"Edge Functions"** في القائمة الفرعية
+
+#### الطريقة الثالثة: من Deploys
+1. اضغط على **"Deploys"** من القائمة الجانبية
+2. افتح آخر deploy
+3. ابحث عن قسم **"Functions"** في تفاصيل الـ deploy
+
+#### الطريقة الرابعة: البحث المباشر
+- في شريط البحث في Netlify، ابحث عن "Functions" أو "Edge Functions"
+
+### 2. إعادة نشر الموقع أولاً
+
+**الأهم:** قبل أن تبحث عن Functions tab، يجب نشر الموقع أولاً!
+
+1. **رفع التغييرات إلى Git:**
+   ```bash
+   git add .
+   git commit -m "Add Prerender.io Edge Function"
+   git push
+   ```
+
+2. **انتظار انتهاء البناء:**
+   - اذهب إلى **"Deploys"** من القائمة الجانبية
+   - انتظر حتى يظهر آخر deploy باللون الأخضر (نجح)
+   - يجب أن ترى "Build successful" أو "Deploy successful"
+
+3. **بعد النشر:**
+   - Edge Functions ستظهر تلقائياً
+   - يمكنك التحقق من Logs في آخر deploy
+
+### 3. التحقق من أن Edge Function تم نشرها
+
+**بدون الوصول إلى Functions tab:**
+1. اذهب إلى **"Deploys"** → افتح آخر deploy
+2. ابحث في Logs عن كلمة "prerender" أو "Edge Functions"
+3. أو اذهب إلى **"Logs"** من القائمة الجانبية
+4. ابحث عن أي أخطاء متعلقة بـ Edge Functions
 
 ### 3. التحقق من إعدادات Build
 
