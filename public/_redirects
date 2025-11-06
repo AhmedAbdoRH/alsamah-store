@@ -1,12 +1,5 @@
-# Prerender.io integration with token-based authentication
-# This configuration redirects crawlers to Prerender.io service
-# Prerender.io will automatically detect crawlers based on User-Agent
-# Format: from_path  to_url  status_code  headers
-# The "!" forces the redirect even if the file exists
-# Note: This redirects ALL requests to Prerender.io, which will handle crawler detection
-/*  https://service.prerender.io/https://alsamah-store.com/:splat  200!  X-Prerender-Token=V85u5WS8kbxdXKCF5KuR
+# Prerender.io integration is handled by netlify/edge-functions/prerender.ts
+# This file only handles SPA routing fallback for regular users
 
 # SPA routing - fallback for regular users
-# Note: This rule may not be reached due to the Prerender rule above
-# However, Prerender.io will handle non-crawler requests appropriately
 /*    /index.html   200
