@@ -58,12 +58,8 @@
     X-Robots-Tag = "noindex, nofollow"
 
 # Prerender.io integration is defined via public/_redirects to ensure proper header forwarding and UA conditions.
-
-# SPA routing - fallback for regular users
-[[redirects]]
-  from = "/*"
-  to = "/index.html"
-  status = 200
+# Note: _redirects file takes precedence over redirects in netlify.toml
+# The SPA fallback is handled in _redirects file to ensure proper order
 
 # Redirect www to non-www
 [[redirects]]

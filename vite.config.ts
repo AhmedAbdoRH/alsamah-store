@@ -35,10 +35,21 @@ export default defineConfig({
   // Enable gzip compression
   server: {
     headers: {
-      'Cache-Control': 'public, max-age=31536000',
+      // Avoid aggressive caching in dev; rely on HMR
+      'Cache-Control': 'no-store',
     },
     hmr: {
-      port: 5174,
+      port: 5173,
+    },
+    watch: {
+      // Ignore files that may be updated by external tools to prevent reload loops
+      ignored: [
+        '**/dist/**',
+        '**/public/sitemap.xml',
+        '**/public/robots.txt',
+        '**/env.tmp',
+        '**/supabase/migrations/**',
+      ],
     },
   },
 });
