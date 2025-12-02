@@ -409,7 +409,7 @@ function StaggeredHome({
                     </svg>
                   </div>
                 </div>
-                <span>تواصل معنا على تيليجرام</span>
+                <span>تواصل على تيليجرام</span>
               </button>
             </div>
           </div>
