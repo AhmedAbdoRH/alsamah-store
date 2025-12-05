@@ -143,15 +143,6 @@ export default function Services() {
 
   return (
     <section className="py-16" style={{backgroundColor: '#2a2a2a'}} id="products">
-      {/* Facebook Button */}
-      <motion.div
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, delay: 0.2 }}
-      >
-        <FacebookButton />
-      </motion.div>
-      
       <motion.div
         className="container mx-auto px-4 bg-white/5 backdrop-blur-xl rounded-2xl p-8 border border-white/10 shadow-2xl shadow-black/40"
         initial="hidden"
@@ -366,7 +357,6 @@ export default function Services() {
               </AnimatePresence>
             </div>
             
-
           </motion.div>
         )}
 

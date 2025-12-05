@@ -68,66 +68,75 @@ function App() {
   const [services, setServices] = useState<any[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
 
+  // Debug environment variables
+  useEffect(() => {
+    console.log('VITE_SUPABASE_URL:', import.meta.env.VITE_SUPABASE_URL);
+    console.log('VITE_SUPABASE_ANON_KEY exists:', !!import.meta.env.VITE_SUPABASE_ANON_KEY);
+  }, []);
+
   useEffect(() => {
     let isMounted = true;
     async function initApp() {
-      await fetchStoreSettings();
-      
-      // Fetch banners
-      const { data: bannersData, error: bannersError } = await supabase
-        .from('banners')
-        .select('*')
-        .order('created_at', { ascending: false });
+      try {
+        await fetchStoreSettings();
+        
+        // Fetch banners
+        const { data: bannersData, error: bannersError } = await supabase
+          .from('banners')
+          .select('*')
+          .order('created_at', { ascending: false });
 
-      // Fetch services for structured data
-      const { data: servicesData, error: servicesError } = await supabase
-        .from('services')
-        .select('*')
-        .limit(10)
-        .order('created_at', { ascending: false });
+        // Fetch services for structured data
+        const { data: servicesData, error: servicesError } = await supabase
+          .from('services')
+          .select('*')
+          .limit(10)
+          .order('created_at', { ascending: false });
 
-      // Fetch categories for structured data
-      const { data: categoriesData, error: categoriesError } = await supabase
-        .from('categories')
-        .select('*')
-        .order('name');
+        // Fetch categories for structured data
+        const { data: categoriesData, error: categoriesError } = await supabase
+          .from('categories')
+          .select('*')
+          .order('name');
 
-      if (isMounted) {
-        if (bannersError) {
-          console.error("Error fetching banners:", bannersError);
-          setBanners([]);
-        } else {
-          setBanners(bannersData || []);
+        if (isMounted) {
+          if (bannersError) {
+            console.error("Error fetching banners:", bannersError);
+            setBanners([]);
+          } else {
+            setBanners(bannersData || []);
+          }
+
+          if (servicesError) {
+            console.error("Error fetching services:", servicesError);
+            setServices([]);
+          } else {
+            setServices(servicesData || []);
+          }
+
+          if (categoriesError) {
+            console.error("Error fetching categories:", categoriesError);
+            setCategories([]);
+          } else {
+            setCategories(categoriesData || []);
+          }
+          
+          // Set loading to false after all data is fetched
+          setLoading(false);
         }
-
-        if (servicesError) {
-          console.error("Error fetching services:", servicesError);
-          setServices([]);
-        } else {
-          setServices(servicesData || []);
-        }
-
-        if (categoriesError) {
-          console.error("Error fetching categories:", categoriesError);
-          setCategories([]);
-        } else {
-          setCategories(categoriesData || []);
+      } catch (error) {
+        console.error("Error initializing app:", error);
+        if (isMounted) {
+          setLoading(false);
         }
       }
-
-      // Wait for at least 2 seconds OR until settings are fetched, whichever is longer
-      // This part is primarily for the initial LoadingScreen, not PrivateRoute
-      const timer = setTimeout(() => {
-        if (isMounted) setLoading(false);
-      }, 2000); // Minimum 2 seconds for initial loading screen
-
-      return () => {
-        isMounted = false;
-        clearTimeout(timer);
-      };
     }
+    
     initApp();
-    return () => { isMounted = false; };
+    
+    return () => { 
+      isMounted = false; 
+    };
   }, []);
 
   useEffect(() => {
@@ -309,7 +318,7 @@ function App() {
         {/* Structured Data */}
         <StructuredData 
           type="organization" 
-          data={storeSettings} 
+          data={storeSettings || undefined} 
           services={services}
           categories={categories}
         />
@@ -384,34 +393,34 @@ function StaggeredHome({
   return (
     <>
       {/* Social Buttons Section - Added below hero */}
-      <div className="py-8 bg-gradient-to-b from-black/80 to-transparent">
+      <div className="py-8" style={{backgroundColor: '#2a2a2a'}}>
         <div className="container mx-auto px-4">
-          <div className="flex flex-wrap justify-center gap-6">
-            <FacebookButton 
-              facebookUrl={storeSettings?.facebook_url} 
-              className="scale-110 transform transition-transform hover:scale-105"
-            />
-            <div className="flex justify-center my-8 scale-110 transform transition-transform hover:scale-105">
-              <button 
-                className="telegram-button"
-                onClick={() => window.open('https://t.me/samah_furnitures', '_blank', 'noopener,noreferrer')}
-                type="button"
-              >
-                <div className="svg-wrapper-1">
-                  <div className="svg-wrapper">
-                    <svg
-                      viewBox="0 0 24 24"
-                      height="1.2em"
-                      fill="currentColor"
-                      xmlns="http://www.w3.org/2000/svg"
-                    >
-                      <path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.35-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z" />
-                    </svg>
-                  </div>
-                </div>
-                <span>تواصل على تيليجرام</span>
-              </button>
+          <div className="flex flex-wrap justify-center items-center gap-6">
+            <div className="flex justify-center">
+              <FacebookButton 
+                facebookUrl={storeSettings?.facebook_url || undefined} 
+                className="scale-110 transform transition-transform hover:scale-105 !my-0"
+              />
             </div>
+            <button 
+              className="telegram-button"
+              onClick={() => window.open('https://t.me/samah_furnitures', '_blank', 'noopener,noreferrer')}
+              type="button"
+            >
+              <div className="svg-wrapper-1">
+                <div className="svg-wrapper">
+                  <svg
+                    viewBox="0 0 24 24"
+                    height="1.2em"
+                    fill="currentColor"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.35-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z" />
+                  </svg>
+                </div>
+              </div>
+              <span>تواصل على تيليجرام</span>
+            </button>
           </div>
         </div>
       </div>
