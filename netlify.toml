@@ -57,6 +57,15 @@
   [headers.values]
     X-Robots-Tag = "noindex, nofollow"
 
+# Social Previews for WhatsApp/Facebook
+[[edge_functions]]
+  path = "/service/*"
+  function = "social-preview"
+
+[[edge_functions]]
+  path = "/product/*"
+  function = "social-preview"
+
 # Redirect www to non-www
 [[redirects]]
   from = "https://www.alsamah-store.com/*"
