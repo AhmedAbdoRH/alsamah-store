@@ -74,6 +74,8 @@ export default async (request: Request, context: any) => {
         headers: {
           'User-Agent': userAgent,
         },
+        // Adding a timeout for fetch
+        signal: AbortSignal.timeout(10000), 
       });
 
       debugHeaders['X-Rendertron-Fetch-Status'] = response.status.toString();
@@ -90,10 +92,12 @@ export default async (request: Request, context: any) => {
             'X-Prerender-Engine': 'Rendertron',
           },
         });
+      } else {
+        debugHeaders['X-Rendertron-Error'] = `Response not OK: ${response.statusText}`;
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Rendertron error:', error);
-      // Fall through to normal request handling
+      debugHeaders['X-Rendertron-Error'] = error.message || 'Unknown error during fetch';
     }
   }
 
