@@ -1,50 +1,39 @@
-# إعداد Rendertron مع Netlify
+# إعداد Prerender.io مع Netlify
 
 ## الحل المطبق
 
-تم إعداد **Rendertron** باستخدام **Netlify Edge Functions**. يقوم هذا النظام بالتحقق من "User-Agent" للزائر، وإذا كان محرك بحث (مثل Googlebot)، يتم توجيه الطلب إلى Rendertron لجلب نسخة HTML جاهزة (Prerendered).
+تم إعداد **Prerender.io** باستخدام **Netlify Edge Functions**. هذا النظام هو الأكثر استقراراً وموثوقية لأرشفة المواقع التي تعمل بـ JavaScript (مثل React).
 
 ## الملفات المعدلة
 
-1. **`netlify/edge-functions/prerender.ts`**: تحتوي على المنطق البرمجي للتحقق من الـ Crawlers وتوجيههم إلى Rendertron.
-2. **`netlify.toml`**: إعداد Edge Functions لتعمل على جميع مسارات الموقع.
-3. **`public/_redirects`**: ملف التوجيه الخاص بـ Netlify.
+1. **`netlify/edge-functions/prerender.ts`**: الكود البرمجي الذي يكتشف محركات البحث ويوجهها لـ Prerender.io.
+2. **`netlify.toml`**: إعدادات Netlify لتفعيل الـ Edge Functions.
 
 ## كيفية التفعيل والتحكم
 
-### 1. إعداد رابط Rendertron (اختياري)
-بشكل افتراضي، يستخدم الكود الرابط التجريبي: `https://render-tron.appspot.com/render`.
-هذا الرابط مخصص للتجربة فقط ولا يضمن استمرارية الخدمة (Uptime).
-للاستخدام الفعلي في الإنتاج (Production)، يفضل:
-1. إعداد سيرفر Rendertron خاص بك (على Google Cloud أو Docker).
-2. تعيين الرابط في Netlify Dashboard:
-   - اذهب إلى **Site settings** > **Environment variables**.
-   - أضف متغيراً جديداً باسم `RENDERTRON_URL`.
-   - ضع الرابط الخاص بك.
+### 1. التوكن (Token)
+بشكل افتراضي، يستخدم الكود التوكن الخاص بك: `V85u5WS8kbxdXKCF5KuR`.
+إذا قمت بتغيير التوكن في Prerender.io، يمكنك تحديثه في Netlify Dashboard:
+1. اذهب إلى **Site settings** > **Environment variables**.
+2. أضف متغيراً باسم `PRERENDER_TOKEN`.
+3. ضع التوكن الجديد.
 
-### 2. الوصول إلى لوحة تحكم Edge Functions
-لمتابعة عمل الـ Prerender:
-1. في Netlify Dashboard، اذهب إلى تبويب **Logs**.
-2. اختر **Edge Functions**.
-3. ستظهر لك سجلات (Logs) لكل طلب يتم معالجته بواسطة Rendertron.
+### 2. الخطة المجانية والكمية المستهلكة
+- الخطة المجانية تمنحك **250 صفحة شهرياً**.
+- **التجديد**: تتجدد هذه الكمية تلقائياً كل شهر في تاريخ اشتراكك.
+- **إذا انتهت الكمية**: سيعيد السيرفر خطأ (غالباً 401 أو 402)، وسيقوم الكود تلقائياً بتوجيه الطلب للنسخة العادية من الموقع (بدون Prerender) لضمان عدم توقف الموقع.
 
 ### 3. اختبار التكامل
-يمكنك التأكد من أن النظام يعمل باستخدام Terminal (PowerShell):
+استخدم Terminal (PowerShell) للتأكد:
 
 ```powershell
-# محاكاة محرك بحث Google
 curl.exe -A "Googlebot" "https://alsamah-store.com/" -I
 ```
 
-يجب أن ترى في النتائج:
-- `x-prerender: true`
-- `x-prerender-engine: Rendertron`
-
-## لماذا استخدمنا Edge Functions؟
-- **السرعة**: تتم المعالجة في أقرب سيرفر للزائر (Edge).
-- **التحكم الكامل**: يمكننا تحديد من يتم توجيهه للـ Prerender بدقة.
-- **التوافق**: يعمل بسلاسة مع تطبيقات React/Vite.
+يجب أن ترى:
+- `x-prerender-engine: Prerender.io`
+- `x-prerender-fetch-status: 200` (إذا كانت الكمية متوفرة)
 
 ## ملاحظات هامة
-- تأكد من نشر التغييرات (Push to Git) لتفعيل الإعدادات الجديدة.
-- الـ Edge Functions لا تعمل في البيئة المحلية (Localhost) إلا باستخدام `netlify dev`.
+- تأكد من عمل **Push** للتغييرات إلى Git.
+- يمكنك متابعة الاستهلاك من لوحة تحكم [Prerender.io](https://prerender.io/dashboard).

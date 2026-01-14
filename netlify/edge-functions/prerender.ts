@@ -1,8 +1,10 @@
-// Netlify Edge Function for Rendertron integration
-// This intercepts requests and serves prerendered content to crawlers using Rendertron
+// Netlify Edge Function for Prerender.io integration
+// This intercepts requests and serves prerendered content to crawlers using Prerender.io
 
-// You can set this in Netlify Environment Variables
-const RENDERTRON_URL = Deno.env.get('RENDERTRON_URL') || 'https://render-tron.appspot.com/render';
+// You can set these in Netlify Environment Variables
+const PRERENDER_TOKEN = Deno.env.get('PRERENDER_TOKEN') || 'V85u5WS8kbxdXKCF5KuR';
+const PRERENDER_URL = 'https://service.prerender.io';
+const SITE_URL = 'https://alsamah-store.com';
 
 // List of crawler user agents that should be prerendered
 const CRAWLER_AGENTS = [
@@ -61,25 +63,24 @@ export default async (request: Request, context: any) => {
 
   // Check if request is from a crawler
   if (isCrawler(userAgent)) {
-    // Rendertron URL format: RENDERTRON_URL/ENCODED_URL
-    // Using encodeURIComponent is safer for Rendertron
-    const targetUrl = encodeURIComponent(request.url);
-    const rendertronUrl = `${RENDERTRON_URL}/${targetUrl}`;
+    // Prerender.io URL format: service.prerender.io/https://example.com
+    const targetUrl = request.url;
+    const prerenderUrl = `${PRERENDER_URL}/${targetUrl}`;
     
-    debugHeaders['X-Rendertron-URL'] = rendertronUrl;
+    debugHeaders['X-Prerender-URL'] = prerenderUrl;
     
     try {
-      console.log(`Prerendering for crawler: ${userAgent} -> ${rendertronUrl}`);
+      console.log(`Prerendering for crawler: ${userAgent} -> ${prerenderUrl}`);
       
-      const response = await fetch(rendertronUrl, {
+      const response = await fetch(prerenderUrl, {
         headers: {
+          'X-Prerender-Token': PRERENDER_TOKEN,
           'User-Agent': userAgent,
         },
-        // Adding a timeout for fetch
         signal: AbortSignal.timeout(10000), 
       });
 
-      debugHeaders['X-Rendertron-Fetch-Status'] = response.status.toString();
+      debugHeaders['X-Prerender-Fetch-Status'] = response.status.toString();
 
       if (response.ok) {
         const html = await response.text();
@@ -90,15 +91,15 @@ export default async (request: Request, context: any) => {
             'Content-Type': 'text/html; charset=utf-8',
             'Cache-Control': 'public, max-age=3600',
             'X-Prerender': 'true',
-            'X-Prerender-Engine': 'Rendertron',
+            'X-Prerender-Engine': 'Prerender.io',
           },
         });
       } else {
-        debugHeaders['X-Rendertron-Error'] = `Response not OK: ${response.statusText}`;
+        debugHeaders['X-Prerender-Error'] = `Response not OK: ${response.statusText}`;
       }
     } catch (error: any) {
-      console.error('Rendertron error:', error);
-      debugHeaders['X-Rendertron-Error'] = error.message || 'Unknown error during fetch';
+      console.error('Prerender.io error:', error);
+      debugHeaders['X-Prerender-Error'] = error.message || 'Unknown error during fetch';
     }
   }
 
