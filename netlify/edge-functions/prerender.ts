@@ -65,6 +65,8 @@ export default async (request: Request, context: any) => {
     const targetUrl = request.url;
     const rendertronUrl = `${RENDERTRON_URL}/${targetUrl}`;
     
+    debugHeaders['X-Rendertron-URL'] = rendertronUrl;
+    
     try {
       console.log(`Prerendering for crawler: ${userAgent} -> ${rendertronUrl}`);
       
@@ -73,6 +75,8 @@ export default async (request: Request, context: any) => {
           'User-Agent': userAgent,
         },
       });
+
+      debugHeaders['X-Rendertron-Fetch-Status'] = response.status.toString();
 
       if (response.ok) {
         const html = await response.text();
