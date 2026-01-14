@@ -3,12 +3,6 @@
   command = "npm run build"
   publish = "dist"
 
-# Edge Functions configuration for Prerender.io
-# This intercepts all requests and serves prerendered content to crawlers
-[[edge_functions]]
-  function = "prerender"
-  path = "/*"
-
 # Headers for better performance and SEO
 [[headers]]
   for = "/*"
@@ -62,9 +56,6 @@
   for = "/admin/*"
   [headers.values]
     X-Robots-Tag = "noindex, nofollow"
-
-# Prerender.io integration is defined via netlify/edge-functions/prerender.ts
-# Note: Edge Functions take precedence over standard redirects for crawlers
 
 # Redirect www to non-www
 [[redirects]]

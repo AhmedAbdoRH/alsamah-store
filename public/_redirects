@@ -1,5 +1,2 @@
-# Rendertron integration is handled by netlify/edge-functions/prerender.ts
-# This file only handles SPA routing fallback for regular users
-
 # SPA routing - fallback for regular users
 /*    /index.html   200
