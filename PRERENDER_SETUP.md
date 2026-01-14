@@ -1,158 +1,47 @@
-# إعداد Prerender.io مع Netlify
+# إعداد Rendertron مع Netlify
 
 ## الحل المطبق
 
-تم إعداد Prerender.io باستخدام Netlify Edge Functions للتحقق من User-Agent وتوجيه crawlers فقط.
+تم إعداد **Rendertron** باستخدام **Netlify Edge Functions**. يقوم هذا النظام بالتحقق من "User-Agent" للزائر، وإذا كان محرك بحث (مثل Googlebot)، يتم توجيه الطلب إلى Rendertron لجلب نسخة HTML جاهزة (Prerendered).
 
 ## الملفات المعدلة
 
-1. **`netlify/edge-functions/prerender.ts`** - Edge Function للتحقق من crawlers
-2. **`netlify.toml`** - إضافة إعداد Edge Functions
-3. **`public/_redirects`** - SPA routing fallback
+1. **`netlify/edge-functions/prerender.ts`**: تحتوي على المنطق البرمجي للتحقق من الـ Crawlers وتوجيههم إلى Rendertron.
+2. **`netlify.toml`**: إعداد Edge Functions لتعمل على جميع مسارات الموقع.
+3. **`public/_redirects`**: ملف التوجيه الخاص بـ Netlify.
 
-## الخطوات المطلوبة في Netlify Dashboard
+## كيفية التفعيل والتحكم
 
-### 1. الوصول إلى Functions tab
+### 1. إعداد رابط Rendertron (اختياري)
+بشكل افتراضي، يستخدم الكود الرابط العام: `https://render-tron.app/render`.
+إذا كان لديك سيرفر Rendertron خاص بك، يمكنك تعيينه في Netlify Dashboard:
+1. اذهب إلى **Site settings** > **Environment variables**.
+2. أضف متغيراً جديداً باسم `RENDERTRON_URL`.
+3. ضع الرابط الخاص بك (مثلاً: `https://your-rendertron-instance.com/render`).
 
-**المشكلة:** Functions tab غير موجود مباشرة في القائمة الجانبية!
+### 2. الوصول إلى لوحة تحكم Edge Functions
+لمتابعة عمل الـ Prerender:
+1. في Netlify Dashboard، اذهب إلى تبويب **Logs**.
+2. اختر **Edge Functions**.
+3. ستظهر لك سجلات (Logs) لكل طلب يتم معالجته بواسطة Rendertron.
 
-**الطرق للوصول إلى Functions:**
+### 3. اختبار التكامل
+يمكنك التأكد من أن النظام يعمل باستخدام Terminal (PowerShell):
 
-#### الطريقة الأولى: من Project overview
-1. اضغط على **"Project overview"** (المحدد حالياً في القائمة)
-2. في الصفحة الرئيسية، ابحث عن تبويبات في الأعلى أو في المحتوى:
-   - قد تجد **"Functions"** كتبويب علوي
-   - أو في قسم **"Functions & Edge Functions"**
-
-#### الطريقة الثانية: من Project configuration
-1. اضغط على **"Project configuration"** من القائمة الجانبية
-2. ابحث عن **"Functions"** أو **"Edge Functions"** في القائمة الفرعية
-
-#### الطريقة الثالثة: من Deploys
-1. اضغط على **"Deploys"** من القائمة الجانبية
-2. افتح آخر deploy
-3. ابحث عن قسم **"Functions"** في تفاصيل الـ deploy
-
-#### الطريقة الرابعة: البحث المباشر
-- في شريط البحث في Netlify، ابحث عن "Functions" أو "Edge Functions"
-
-### 2. إعادة نشر الموقع أولاً
-
-**الأهم:** قبل أن تبحث عن Functions tab، يجب نشر الموقع أولاً!
-
-1. **رفع التغييرات إلى Git:**
-   ```bash
-   git add .
-   git commit -m "Add Prerender.io Edge Function"
-   git push
-   ```
-
-2. **انتظار انتهاء البناء:**
-   - اذهب إلى **"Deploys"** من القائمة الجانبية
-   - انتظر حتى يظهر آخر deploy باللون الأخضر (نجح)
-   - يجب أن ترى "Build successful" أو "Deploy successful"
-
-3. **بعد النشر:**
-   - Edge Functions ستظهر تلقائياً
-   - يمكنك التحقق من Logs في آخر deploy
-
-### 3. التحقق من أن Edge Function تم نشرها
-
-**بدون الوصول إلى Functions tab:**
-1. اذهب إلى **"Deploys"** → افتح آخر deploy
-2. ابحث في Logs عن كلمة "prerender" أو "Edge Functions"
-3. أو اذهب إلى **"Logs"** من القائمة الجانبية
-4. ابحث عن أي أخطاء متعلقة بـ Edge Functions
-
-### 3. التحقق من إعدادات Build
-
-اذهب إلى **Build & deploy** → **Build settings**:
-- **Build command**: `npm run build`
-- **Publish directory**: `dist`
-
-### 4. اختبار التكامل
-
-بعد النشر، اختبر الموقع:
-
-```bash
-# اختبار من PowerShell
-curl.exe -A "Prerender" "https://alsamah-store.com/" -I
+```powershell
+# محاكاة محرك بحث Google
+curl.exe -A "Googlebot" "https://alsamah-store.com/" -I
 ```
 
-يجب أن تحصل على استجابة 200 مع HTML محدد مسبقاً.
+يجب أن ترى في النتائج:
+- `x-prerender: true`
+- `x-prerender-engine: Rendertron`
 
-### 5. التحقق في Prerender.io
+## لماذا استخدمنا Edge Functions؟
+- **السرعة**: تتم المعالجة في أقرب سيرفر للزائر (Edge).
+- **التحكم الكامل**: يمكننا تحديد من يتم توجيهه للـ Prerender بدقة.
+- **التوافق**: يعمل بسلاسة مع تطبيقات React/Vite.
 
-1. اذهب إلى لوحة Prerender.io
-2. اضغط **"Verify Integration"**
-3. يجب أن ينجح التحقق
-
-## حل المشاكل الشائعة
-
-### إذا لم يعمل التكامل:
-
-1. **تحقق من أن Edge Function تم نشرها:**
-   - اذهب إلى **Functions** tab في Netlify
-   - يجب أن ترى `prerender` في القائمة
-
-2. **تحقق من Logs:**
-   - اذهب إلى **Functions** → **prerender** → **Logs**
-   - ابحث عن أي أخطاء
-
-3. **تحقق من التوكن:**
-   - تأكد من أن التوكن `V85u5WS8kbxdXKCF5KuR` صحيح في `netlify/edge-functions/prerender.ts`
-
-4. **إذا كنت تستخدم Cloudflare أو CDN آخر:**
-   - أضف عناوين IP الخاصة بـ Prerender.io إلى القائمة البيضاء
-   - عطّل Bot Fight Mode أو Challenge Mode للـ User-Agent "Prerender"
-
-5. **تحقق من Cache:**
-   - امسح cache Netlify
-   - اذهب إلى **Deploys** → اختر آخر deploy → **Clear cache and retry deploy**
-
-## عناوين IP الخاصة بـ Prerender.io
-
-إذا كنت تستخدم Cloudflare أو WAF، أضف هذه العناوين إلى القائمة البيضاء:
-
-يمكنك العثور على أحدث عناوين IP من: https://prerender.io/documentation/install-netlify
-
-## الفرق بين Prerender.io و Netlify Prerendering
-
-### Prerender.io (ما أعددناه):
-- خدمة خارجية متخصصة
-- تحكم أكبر في الإعدادات
-- دعم أفضل للـ SEO
-- يتطلب Edge Function (تم إعداده)
-
-### Netlify Prerendering (المدمج):
-- خدمة مدمجة في Netlify (Beta)
-- أسهل في الإعداد (فقط اضغط Configure)
-- محدود في الميزات
-- لا يحتاج إعدادات إضافية
-
-## اختيار الحل المناسب
-
-### إذا كنت تريد استخدام Prerender.io (الحل الحالي):
-- **لا تفعل** Netlify Prerendering
-- استمر مع Edge Function الذي أعددناه
-- بعد النشر، اختبر من Prerender.io Dashboard
-
-### إذا كنت تريد استخدام Netlify Prerendering (أسهل):
-1. اضغط **"Configure"** في قسم Prerendering
-2. اتبع التعليمات
-3. **احذف** Edge Function الذي أعددناه (لن تحتاجه)
-
-## ملاحظات مهمة
-
-- **لا تستخدم الاثنين معاً** - اختر واحد فقط
-- Edge Functions تعمل في جميع خطط Netlify (حتى المجانية)
-- Netlify Prerendering متاح في جميع الخطط أيضاً
-- التكامل يعمل تلقائياً بعد النشر
-
-## الدعم
-
-إذا استمرت المشكلة:
-1. تحقق من logs في Netlify Functions
-2. تحقق من logs في Prerender.io Dashboard
-3. تواصل مع دعم Prerender.io أو Netlify
-
+## ملاحظات هامة
+- تأكد من نشر التغييرات (Push to Git) لتفعيل الإعدادات الجديدة.
+- الـ Edge Functions لا تعمل في البيئة المحلية (Localhost) إلا باستخدام `netlify dev`.

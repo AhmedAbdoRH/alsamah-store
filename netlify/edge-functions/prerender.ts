@@ -1,13 +1,11 @@
-// Netlify Edge Function for Prerender.io integration
-// This intercepts requests and serves prerendered content to crawlers
+// Netlify Edge Function for Rendertron integration
+// This intercepts requests and serves prerendered content to crawlers using Rendertron
 
-const PRERENDER_TOKEN = 'V85u5WS8kbxdXKCF5KuR';
-const PRERENDER_URL = 'https://service.prerender.io';
-const SITE_URL = 'https://alsamah-store.com';
+// You can set this in Netlify Environment Variables
+const RENDERTRON_URL = Deno.env.get('RENDERTRON_URL') || 'https://render-tron.app/render';
 
 // List of crawler user agents that should be prerendered
 const CRAWLER_AGENTS = [
-  'Prerender',
   'Googlebot',
   'Bingbot',
   'Yandex',
@@ -31,6 +29,7 @@ const CRAWLER_AGENTS = [
   'Discordbot',
   'Instagram',
   'Google-InspectionTool',
+  'Prerender',
 ];
 
 function isCrawler(userAgent: string): boolean {
@@ -51,18 +50,20 @@ export default async (request: Request, context: any) => {
 
   // Skip static assets and API routes - let them pass through normally
   if (isStaticAsset(path) || path.startsWith('/.netlify/') || path.startsWith('/api/')) {
-    // Return undefined to let the request pass through
     return;
   }
 
   // Check if request is from a crawler
   if (isCrawler(userAgent)) {
-    const prerenderUrl = `${PRERENDER_URL}/${SITE_URL}${path}${search}`;
+    // Rendertron URL format: RENDERTRON_URL/FULL_URL
+    const targetUrl = request.url;
+    const rendertronUrl = `${RENDERTRON_URL}/${targetUrl}`;
     
     try {
-      const response = await fetch(prerenderUrl, {
+      console.log(`Prerendering for crawler: ${userAgent} -> ${rendertronUrl}`);
+      
+      const response = await fetch(rendertronUrl, {
         headers: {
-          'X-Prerender-Token': PRERENDER_TOKEN,
           'User-Agent': userAgent,
         },
       });
@@ -75,17 +76,17 @@ export default async (request: Request, context: any) => {
             'Content-Type': 'text/html; charset=utf-8',
             'Cache-Control': 'public, max-age=3600',
             'X-Prerender': 'true',
+            'X-Prerender-Engine': 'Rendertron',
           },
         });
       }
     } catch (error) {
-      console.error('Prerender.io error:', error);
+      console.error('Rendertron error:', error);
       // Fall through to normal request handling
     }
   }
 
   // For non-crawlers or if prerender fails, continue with normal request
-  // Return undefined to let the request pass through to the origin
   return;
 };
 

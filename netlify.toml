@@ -3,7 +3,7 @@
   command = "npm run build"
   publish = "dist"
 
-# Edge Functions configuration for Prerender.io
+# Edge Functions configuration for Rendertron
 # This intercepts all requests and serves prerendered content to crawlers
 [[edge_functions]]
   function = "prerender"
@@ -63,9 +63,8 @@
   [headers.values]
     X-Robots-Tag = "noindex, nofollow"
 
-# Prerender.io integration is defined via public/_redirects to ensure proper header forwarding and UA conditions.
-# Note: _redirects file takes precedence over redirects in netlify.toml
-# The SPA fallback is handled in _redirects file to ensure proper order
+# Rendertron integration is defined via netlify/edge-functions/prerender.ts
+# Note: Edge Functions take precedence over standard redirects for crawlers
 
 # Redirect www to non-www
 [[redirects]]
