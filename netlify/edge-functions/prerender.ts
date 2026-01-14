@@ -48,6 +48,12 @@ export default async (request: Request, context: any) => {
   const path = url.pathname;
   const search = url.search;
 
+  // Debugging header to confirm Edge Function is executing
+  const debugHeaders = {
+    'X-Edge-Function-Processed': 'true',
+    'X-Edge-Is-Crawler': isCrawler(userAgent).toString(),
+  };
+
   // Skip static assets and API routes - let them pass through normally
   if (isStaticAsset(path) || path.startsWith('/.netlify/') || path.startsWith('/api/')) {
     return;
@@ -73,6 +79,7 @@ export default async (request: Request, context: any) => {
         return new Response(html, {
           status: 200,
           headers: {
+            ...debugHeaders,
             'Content-Type': 'text/html; charset=utf-8',
             'Cache-Control': 'public, max-age=3600',
             'X-Prerender': 'true',
@@ -87,6 +94,11 @@ export default async (request: Request, context: any) => {
   }
 
   // For non-crawlers or if prerender fails, continue with normal request
-  return;
+  // Return the request with debug headers for non-crawlers too (optional, but good for testing)
+  const response = await context.next();
+  Object.entries(debugHeaders).forEach(([key, value]) => {
+    response.headers.set(key, value);
+  });
+  return response;
 };
 
