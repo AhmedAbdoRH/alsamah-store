@@ -13,11 +13,14 @@
 ## كيفية التفعيل والتحكم
 
 ### 1. إعداد رابط Rendertron (اختياري)
-بشكل افتراضي، يستخدم الكود الرابط العام: `https://render-tron.app/render`.
-إذا كان لديك سيرفر Rendertron خاص بك، يمكنك تعيينه في Netlify Dashboard:
-1. اذهب إلى **Site settings** > **Environment variables**.
-2. أضف متغيراً جديداً باسم `RENDERTRON_URL`.
-3. ضع الرابط الخاص بك (مثلاً: `https://your-rendertron-instance.com/render`).
+بشكل افتراضي، يستخدم الكود الرابط التجريبي: `https://render-tron.appspot.com/render`.
+هذا الرابط مخصص للتجربة فقط ولا يضمن استمرارية الخدمة (Uptime).
+للاستخدام الفعلي في الإنتاج (Production)، يفضل:
+1. إعداد سيرفر Rendertron خاص بك (على Google Cloud أو Docker).
+2. تعيين الرابط في Netlify Dashboard:
+   - اذهب إلى **Site settings** > **Environment variables**.
+   - أضف متغيراً جديداً باسم `RENDERTRON_URL`.
+   - ضع الرابط الخاص بك.
 
 ### 2. الوصول إلى لوحة تحكم Edge Functions
 لمتابعة عمل الـ Prerender:

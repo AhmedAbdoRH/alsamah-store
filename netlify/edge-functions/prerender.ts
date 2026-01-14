@@ -2,7 +2,7 @@
 // This intercepts requests and serves prerendered content to crawlers using Rendertron
 
 // You can set this in Netlify Environment Variables
-const RENDERTRON_URL = Deno.env.get('RENDERTRON_URL') || 'https://render-tron.app/render';
+const RENDERTRON_URL = Deno.env.get('RENDERTRON_URL') || 'https://render-tron.appspot.com/render';
 
 // List of crawler user agents that should be prerendered
 const CRAWLER_AGENTS = [
