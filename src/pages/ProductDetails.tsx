@@ -24,8 +24,6 @@ export default function ProductDetails() {
   // Scroll to top when product changes
   useEffect(() => {
     window.scrollTo(0, 0);
-    // Inform Prerender.io that the page is not ready yet for snapshot
-    (window as any).prerenderReady = false;
   }, [id]);
 
   // Fetch service and suggested products on ID change
@@ -66,11 +64,6 @@ export default function ProductDetails() {
       setIsLoading(false);
     }
   };
-
-  // Signal to Prerender.io when the page has fully loaded critical data and meta tags are set
-  useEffect(() => {
-    (window as any).prerenderReady = !isLoading && !!service;
-  }, [isLoading, service]);
 
   const fetchSuggested = async () => {
     if (!service) return;
