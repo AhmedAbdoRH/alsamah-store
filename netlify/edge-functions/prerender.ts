@@ -61,8 +61,9 @@ export default async (request: Request, context: any) => {
 
   // Check if request is from a crawler
   if (isCrawler(userAgent)) {
-    // Rendertron URL format: RENDERTRON_URL/FULL_URL
-    const targetUrl = request.url;
+    // Rendertron URL format: RENDERTRON_URL/ENCODED_URL
+    // Using encodeURIComponent is safer for Rendertron
+    const targetUrl = encodeURIComponent(request.url);
     const rendertronUrl = `${RENDERTRON_URL}/${targetUrl}`;
     
     debugHeaders['X-Rendertron-URL'] = rendertronUrl;
