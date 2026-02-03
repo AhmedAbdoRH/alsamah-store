@@ -57,7 +57,7 @@ const ProductCardDirect = ({ service }: { service: Service }) => {
                       <span className={`text-lg text-[#FFD700]`}>ج</span>
                     </div>
                     {minSalePrice !== maxSalePrice && (
-                      <span className="text-xs text-gray-400">يبدأ من</span>
+                      <span className="text-xs text-gray-400">ابتداءً من</span>
                     )}
                   </>
                 );
@@ -69,7 +69,7 @@ const ProductCardDirect = ({ service }: { service: Service }) => {
                       <span className={`text-lg text-[#FFD700]`}>ج</span>
                     </div>
                     {minPrice !== maxPrice && (
-                      <span className="text-xs text-gray-400">يبدأ من</span>
+                      <span className="text-xs text-gray-400">ابتداءً من</span>
                     )}
                   </>
                 );
@@ -97,7 +97,7 @@ const ProductCardDirect = ({ service }: { service: Service }) => {
                       <span className={`text-lg text-[#FFD700]`}>{smartPrice}</span>
                       <span className={`text-lg text-[#FFD700]`}>ج</span>
                     </div>
-                    <span className="text-xs text-yellow-400">سعر تقديري</span>
+                    <span className="text-xs text-gray-400">ابتداءً من</span>
                   </>
                 );
               }
@@ -143,7 +143,7 @@ const ProductCardDirect = ({ service }: { service: Service }) => {
                     <span className={`text-lg text-[#FFD700]`}>{smartPrice}</span>
                     <span className={`text-lg text-[#FFD700]`}>ج</span>
                   </div>
-                  <span className="text-xs text-yellow-400">سعر تقديري</span>
+                  <span className="text-xs text-gray-400">ابتداءً من</span>
                 </>
               );
             })()

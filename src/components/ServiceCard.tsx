@@ -192,10 +192,8 @@ export default function ProductCard({ title, description, imageUrl, price, saleP
                   </span>
                   <span className={`font-bold text-lg sm:text-xl text-[#FFD700]`}>ج</span>
                 </div>
-                {pricingStrategy === 'smart-fallback' ? (
-                  <span className="text-xs text-yellow-400">سعر تقديري</span>
-                ) : hasMultiplePrices ? (
-                  <span className="text-xs text-gray-400">يبدأ من</span>
+                {pricingStrategy === 'smart-fallback' || hasMultiplePrices ? (
+                  <span className="text-xs text-gray-400">ابتداءً من</span>
                 ) : (
                   <span className="text-xs text-gray-400">سعر موحد</span>
                 )}
@@ -220,7 +218,7 @@ export default function ProductCard({ title, description, imageUrl, price, saleP
                   <span className={`font-bold text-lg sm:text-xl text-[#FFD700]`}>ج</span>
                 </div>
                 {pricingStrategy === 'smart-fallback' && (
-                  <span className="text-xs text-yellow-400">سعر تقديري</span>
+                  <span className="text-xs text-gray-400">ابتداءً من</span>
                 )}
               </>
             ) : (
