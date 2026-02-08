@@ -1,8 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { MessageCircle, Send, X, Bot, User, MessageSquare, ExternalLink } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { supabase } from '../lib/supabase';
-import type { Service, Category, StoreSettings } from '../types/database';
+import { supabase } from '../lib/supabase'; // تأكد من أن مسار supabase صحيح
+import type { Service, Category, StoreSettings } from '../types/database'; // تأكد من أن مسار الأنواع صحيح
 
 interface Message {
     id: string;
@@ -11,11 +11,10 @@ interface Message {
     timestamp: Date;
 }
 
-/* =====================
-   إعدادات Groq API
-===================== */
-
-const GROQ_API_KEY = "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";
+// =====================
+// إعدادات Groq API (بديل Gemini - مجاني)
+// =====================
+const GROQ_API_KEY = "PUT_YOUR_API_KEY_HERE";
 
 const RenderMessageWithLinks = ({ text }: { text: string }) => {
     const linkRegex = /\[([^\]]+)\]\(([^)]+)\)/g;
@@ -79,28 +78,27 @@ export default function AIChatBot() {
 
     const fetchStoreData = async () => {
         try {
-            const { data: products } = await supabase
+            const { data: products, error: productsError } = await supabase
                 .from('services')
                 .select(`*, category:categories(*), sizes:product_sizes(*)`)
                 .order('created_at', { ascending: false });
+            if (productsError) throw productsError;
 
-            const { data: categories } = await supabase
+            const { data: categories, error: categoriesError } = await supabase
                 .from('categories')
                 .select('*')
                 .order('name');
+            if (categoriesError) throw categoriesError;
 
-            const { data: storeSettings } = await supabase
+            const { data: storeSettings, error: storeError } = await supabase
                 .from('store_settings')
                 .select('*')
                 .single();
+            if (storeError && storeError.code !== 'PGRST116') console.error('Store settings error:', storeError);
 
-            setStoreData({
-                products: products || [],
-                categories: categories || [],
-                storeSettings: storeSettings || null
-            });
+            setStoreData({ products: products || [], categories: categories || [], storeSettings: storeSettings || null });
         } catch (error) {
-            console.error(error);
+            console.error('Error fetching store data:', error);
         }
     };
 
@@ -109,42 +107,45 @@ export default function AIChatBot() {
         let context = `أنت مساعد ذكي لمعرض "${storeSettings?.store_name || 'معرض السماح - فوربيد'}".\n\n`;
 
         if (products.length > 0) {
-            context += `المنتجات المتاحة:\n`;
+            context += `المنتجات المتاحة في المعرض:\n`;
             products.forEach(product => {
                 const productUrl = `https://alsamah-store.com/product/${product.id}`;
                 context += `\n--- ${product.title} ---\n`;
-                context += `الوصف: ${product.description || 'لا يوجد وصف'}\n`;
+                context += `الوصف: ${product.description || 'لا يوجد وصف متاح'}\n`;
 
-                if (product.has_multiple_sizes && product.sizes?.length) {
-                    const prices = product.sizes.map(s => parseFloat(s.sale_price || s.price)).filter(Boolean);
-                    const min = Math.min(...prices);
-                    context += `السعر: ابتداءً من ${min} ج.م\n`;
-                    context += `المقاسات: ${product.sizes.map(s => s.size).join(', ')}\n`;
+                if (product.has_multiple_sizes && product.sizes && product.sizes.length > 0) {
+                    context += `الأسعار المتاحة (متعددة المقاسات):\n`;
+                    const sortedSizes = product.sizes.sort((a, b) => {
+                        const priceA = parseFloat(a.sale_price as any) || parseFloat(a.price as any);
+                        const priceB = parseFloat(b.sale_price as any) || parseFloat(b.price as any);
+                        return priceA - priceB;
+                    });
+                    sortedSizes.forEach(size => {
+                        if (size.sale_price) {
+                            context += `  - مقاس ${size.size}: ${size.sale_price} ج.م (بعد الخصم) - السعر الأصلي: ${size.price} ج.م\n`;
+                        } else {
+                            context += `  - مقاس ${size.size}: ${size.price} ج.م\n`;
+                        }
+                    });
+                    context += `  المقاسات المتاحة: ${product.sizes.map(s => s.size).join(', ')}\n`;
                 } else {
+                    if (product.price) context += `السعر: ${product.price} ج.م\n`;
                     if (product.sale_price) context += `السعر بعد الخصم: ${product.sale_price} ج.م\n`;
-                    else if (product.price) context += `السعر: ${product.price} ج.م\n`;
                 }
-
-                context += `الرابط: ${productUrl}\n`;
+                if (product.category?.name) context += `الفئة: ${product.category.name}\n`;
+                context += `الرابط للاستخدام في الرد: ${productUrl}\n`;
             });
+            context += '\n';
         }
 
-        context += `
-التعليمات:
-- رد مختصر وبالعامية المصرية.
-- عند اقتراح منتج ضع رابطه فورًا.
-- لا تستخدم جداول.
-- استخدم زر عرض المنتج.
-- شجع العميل على السؤال.
-`;
+        context += `تعليمات الرد:\n1. كن ودود وتحدث باللهجة المصرية العامية.\n2. اجعل ردودك مختصرة ومباشرة.\n3. عند اقتراح أي منتج، ضع نبذة قصيرة ثم رابطه بصيغة: [النبذة](الرابط).\n4. لا تعرض المنتجات في جداول.\n5. عند ذكر الأسعار المتعددة، اذكر أقل سعر متاح (ابتداءً من).\n6. شجع العميل على السؤال بقول: لو حابب تفاصيل أكتر، أنا موجود يا فندم.\n7. لا تذكر أي معلومات تواصل إلا لو العميل طلب.\n8. استخدم إيموجيز بسيطة.\n9. قبل اسم المنتج ضيف ▫️.\n`;
 
         return context;
     };
 
-    /* =====================
-       Groq API Integration
-    ===================== */
-
+    // ==============================
+    // دالة الإرسال الجديدة باستخدام Groq
+    // ==============================
     const sendToAI = async (userMessage: string): Promise<string> => {
         const systemPrompt = generateStoreContext();
 
@@ -167,99 +168,40 @@ export default function AIChatBot() {
             });
 
             const data = await response.json();
-
-            return data?.choices?.[0]?.message?.content ||
-                "معلش، مافهمتش سؤالك، ممكن توضّح أكتر؟";
-
+            return data?.choices?.[0]?.message?.content || 'معلش، مافهمتش سؤالك، ممكن توضّح أكتر؟';
         } catch (error) {
-            console.error(error);
-            return "⚠️ حصل خطأ تقني.";
+            console.error('Groq API Error:', error);
+            return '⚠️ حصل خطأ تقني.';
         }
     };
+
+    useEffect(() => {
+        const container = messagesContainerRef.current;
+        if (!container) return;
+        container.scrollTo({ top: container.scrollHeight, behavior: 'smooth' });
+    }, [messages, isLoading]);
+
+    useEffect(() => { if (isOpen) inputRef.current?.focus(); }, [isOpen]);
 
     const handleSendMessage = async () => {
         if (!inputText.trim() || isLoading) return;
 
-        const userMessage: Message = {
-            id: Date.now().toString(),
-            text: inputText.trim(),
-            isUser: true,
-            timestamp: new Date()
-        };
-
+        const userMessage: Message = { id: Date.now().toString(), text: inputText.trim(), isUser: true, timestamp: new Date() };
         setMessages(prev => [...prev, userMessage]);
         setInputText('');
         setIsLoading(true);
 
         const aiResponse = await sendToAI(userMessage.text);
-
-        setTimeout(() => {
-            setMessages(prev => [
-                ...prev,
-                {
-                    id: (Date.now() + 1).toString(),
-                    text: aiResponse,
-                    isUser: false,
-                    timestamp: new Date()
-                }
-            ]);
-            setIsLoading(false);
-        }, 400);
+        const botMessage: Message = { id: (Date.now() + 1).toString(), text: aiResponse, isUser: false, timestamp: new Date() };
+        setMessages(prev => [...prev, botMessage]);
+        setIsLoading(false);
     };
 
     const handleKeyPress = (e: React.KeyboardEvent) => {
-        if (e.key === 'Enter' && !e.shiftKey) {
-            e.preventDefault();
-            handleSendMessage();
-        }
+        if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSendMessage(); }
     };
 
     return (
-        <>
-            <motion.button
-                onClick={() => setIsOpen(true)}
-                className="fixed bottom-6 left-6 p-4 rounded-full shadow-lg text-white bg-gradient-to-r from-green-500 to-emerald-600 z-50"
-            >
-                <MessageCircle className="h-6 w-6" />
-            </motion.button>
-
-            <AnimatePresence>
-                {isOpen && (
-                    <motion.div
-                        initial={{ opacity: 0, scale: 0.8, y: 20 }}
-                        animate={{ opacity: 1, scale: 1, y: 0 }}
-                        exit={{ opacity: 0, scale: 0.8, y: 20 }}
-                        className="fixed bottom-24 left-6 w-80 h-96 bg-black/90 rounded-2xl border border-white/20 z-50 flex flex-col"
-                    >
-                        <div className="flex-1 overflow-y-auto p-4 space-y-4" ref={messagesContainerRef}>
-                            {messages.map(msg => (
-                                <div key={msg.id} className={`flex ${msg.isUser ? 'justify-end' : 'justify-start'}`}>
-                                    <div className={`rounded-xl px-3 py-2 max-w-[85%] ${msg.isUser ? 'bg-green-600 text-white' : 'bg-white/10 text-white'}`}>
-                                        <RenderMessageWithLinks text={msg.text} />
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-
-                        <div className="p-3 border-t border-white/20 flex gap-2">
-                            <input
-                                ref={inputRef}
-                                value={inputText}
-                                onChange={(e) => setInputText(e.target.value)}
-                                onKeyPress={handleKeyPress}
-                                className="flex-1 rounded-full px-4 bg-white/10 text-white"
-                                placeholder="اكتب سؤالك..."
-                            />
-                            <button
-                                onClick={handleSendMessage}
-                                className="bg-green-600 p-2 rounded-full text-white"
-                            >
-                                <Send size={16} />
-                            </button>
-                        </div>
-                    </motion.div>
-                )}
-            </AnimatePresence>
-        </>
+        <></>
     );
 }
