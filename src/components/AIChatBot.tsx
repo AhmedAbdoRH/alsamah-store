@@ -1,40 +1,10 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { MessageCircle, Send, X, Bot, User, MessageSquare, ExternalLink } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { supabase } from '../lib/supabase'; // تأكد من أن مسار supabase صحيح
+import type { Service, Category, StoreSettings } from '../types/database'; // تأكد من أن مسار الأنواع صحيح
 
-// --- ملاحظة: تم إزالة الاستيراد الخارجي لتجنب خطأ التجميع ---
-// في بيئتك المحلية، تأكد من وجود مكتبة @supabase/supabase-js
-// يمكنك استيرادها هكذا: import { createClient } from '@supabase/supabase-js'
-
-// --- تعريف الأنواع (Interfaces) ---
-interface ProductSize {
-    id: string;
-    size: string;
-    price: number | string;
-    sale_price?: number | string;
-}
-
-interface Category {
-    id: string;
-    name: string;
-}
-
-interface Service {
-    id: string;
-    title: string;
-    description: string;
-    price: number;
-    sale_price?: number;
-    has_multiple_sizes: boolean;
-    category?: Category;
-    sizes?: ProductSize[];
-}
-
-interface StoreSettings {
-    store_name: string;
-}
-
-interface Message {
+interface Message {أ
     id: string;
     text: string;
     isUser: boolean;
@@ -44,15 +14,9 @@ interface Message {
 // =====================
 // إعدادات Groq API
 // =====================
-const GROQ_API_KEY = "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"; // ضع مفتاح Groq الخاص بك هنا (سيتم استخدامه تلقائياً في البيئة)
-const GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions";
+const GROQ_API_KEY = "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"; 
+const GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions"; 
 const GROQ_MODEL = "openai/gpt-oss-120b"; 
-// =====================
-// إعدادات Supabase (تأكد من استبدالها ببياناتك الحقيقية)
-// =====================
-// const SUPABASE_URL = "YOUR_SUPABASE_URL";
-// const SUPABASE_ANON_KEY = "YOUR_SUPABASE_ANON_KEY";
-// const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 const RenderMessageWithLinks = ({ text }: { text: string }) => {
     const linkRegex = /\[([^\]]+)\]\(([^)]+)\)/g;
@@ -112,199 +76,335 @@ export default function AIChatBot() {
     const messagesContainerRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLInputElement>(null);
 
-    // محاكاة جلب البيانات إذا لم يتوفر Supabase في هذه البيئة
-    const fetchStoreData = async () => {
-        try {
-            // ملاحظة للمستخدم: هنا نضع الكود الفعلي لجلب البيانات من Supabase
-            // سنستخدم حالياً بيانات تجريبية (Mock) لضمان عدم توقف التطبيق عن العمل (Compilation)
-            // في مشروعك الفعلي، استخدم: const { data } = await supabase.from('services').select('...')
-            
-            console.log("جاري محاولة جلب البيانات من قاعدة البيانات...");
-            
-            // بيانات افتراضية لضمان عمل "ذكاء" البوت في المعاينة
-            const mockProducts: Service[] = [
-                {
-                    id: "101",
-                    title: "طقم لحاف فوربيد فندقي",
-                    description: "لحاف قطن 100% ناعم جداً ومناسب لجميع الفصول",
-                    price: 3500,
-                    sale_price: 2900,
-                    has_multiple_sizes: true,
-                    category: { id: "1", name: "ألحفة" },
-                    sizes: [
-                        { id: "s1", size: "240x260", price: 3500, sale_price: 2900 },
-                        { id: "s2", size: "180x220", price: 2800, sale_price: 2400 }
-                    ]
-                },
-                {
-                    id: "102",
-                    title: "مرتبة فوربيد سوبر لوكس",
-                    description: "مرتبة طبية مريحة مع ضمان 10 سنوات",
-                    price: 5000,
-                    has_multiple_sizes: false,
-                    category: { id: "2", name: "مراتب" }
-                }
-            ];
-
-            setStoreData({
-                products: mockProducts,
-                categories: [{ id: "1", name: "ألحفة" }, { id: "2", name: "مراتب" }],
-                storeSettings: { store_name: "معرض السماح - فوربيد" }
-            });
-        } catch (error) {
-            console.error('Error fetching store data:', error);
-        }
-    };
-
     useEffect(() => {
         if (isOpen && storeData.products.length === 0) {
             fetchStoreData();
         }
     }, [isOpen]);
 
+    const fetchStoreData = async () => {
+        try {
+            const { data: products, error: productsError } = await supabase
+                .from('services')
+                .select(`
+                    *,
+                    category:categories(*),
+                    sizes:product_sizes(*)
+                `)
+                .order('created_at', { ascending: false });
+            if (productsError) throw productsError;
+            
+            // Debug: Log the actual data to see what we're getting
+            console.log('ChatBot Debug - Products with sizes:', products);
+
+            const { data: categories, error: categoriesError } = await supabase.from('categories').select('*').order('name');
+            if (categoriesError) throw categoriesError;
+
+            const { data: storeSettings, error: storeError } = await supabase.from('store_settings').select('*').single();
+            if (storeError && storeError.code !== 'PGRST116') console.error('Error fetching store settings:', storeError);
+
+            setStoreData({ products: products || [], categories: categories || [], storeSettings: storeSettings || null });
+        } catch (error) {
+            console.error('Error fetching store data:', error);
+        }
+    };
+
     const generateStoreContext = () => {
         const { products, storeSettings } = storeData;
-        let context = `أنت مساعد ذكي مبيعات خبير لمعرض "${storeSettings?.store_name || 'معرض السماح'}".\n\n`;
-        
-        context += `البيانات الحقيقية المتاحة حالياً من المتجر:\n`;
+        let context = `أنت مساعد ذكي لمعرض "${storeSettings?.store_name || 'معرض السماح - فوربيد'}".\n\n`;
+
         if (products.length > 0) {
-            products.forEach(p => {
-                const url = `https://alsamah-store.com/product/${p.id}`;
-                context += `▫️ ${p.title}\n`;
-                context += `  - الوصف: ${p.description}\n`;
-                context += `  - الفئة: ${p.category?.name || 'عام'}\n`;
+            context += `المنتجات المتاحة في المعرض:\n`;
+            products.forEach(product => {
+                const productUrl = `https://alsamah-store.com/product/${product.id}`;
+                context += `\n--- ${product.title} ---\n`;
+                context += `الوصف: ${product.description || 'لا يوجد وصف متاح'}\n`;
                 
-                if (p.has_multiple_sizes && p.sizes) {
-                    context += `  - المقاسات المتاحة:\n`;
-                    p.sizes.forEach(s => {
-                        context += `    * مقاس ${s.size}: سعره ${s.sale_price || s.price} ج.م\n`;
+                // معالجة الأسعار المتعددة
+                if (product.has_multiple_sizes && product.sizes && product.sizes.length > 0) {
+                    context += `الأسعار المتاحة (متعددة المقاسات):\n`;
+                    
+                    // ترتيب المقاسات حسب السعر
+                    const sortedSizes = product.sizes.sort((a, b) => {
+                        const priceA = parseFloat(a.sale_price as any) || parseFloat(a.price as any);
+                        const priceB = parseFloat(b.sale_price as any) || parseFloat(b.price as any);
+                        return priceA - priceB;
                     });
+                    
+                    sortedSizes.forEach(size => {
+                        if (size.sale_price) {
+                            context += `  - مقاس ${size.size}: ${size.sale_price} ج.م (بعد الخصم) - السعر الأصلي: ${size.price} ج.م\n`;
+                        } else {
+                            context += `  - مقاس ${size.size}: ${size.price} ج.م\n`;
+                        }
+                    });
+                    
+                    // إضافة أقل وأعلى سعر متاح
+                    const validPrices = product.sizes
+                        .map(s => parseFloat(s.price as any))
+                        .filter(p => !isNaN(p) && p > 0);
+                    const validSalePrices = product.sizes
+                        .map(s => parseFloat(s.sale_price as any))
+                        .filter(p => !isNaN(p) && p > 0);
+                    
+                    if (validSalePrices.length > 0) {
+                        const minSalePrice = Math.min(...validSalePrices);
+                        const maxSalePrice = Math.max(...validSalePrices);
+                        context += `  أقل سعر متاح: ${minSalePrice} ج.م (بعد الخصم)\n`;
+                        context += `  أعلى سعر متاح: ${maxSalePrice} ج.م (بعد الخصم)\n`;
+                    } else if (validPrices.length > 0) {
+                        const minPrice = Math.min(...validPrices);
+                        const maxPrice = Math.max(...validPrices);
+                        context += `  أقل سعر متاح: ${minPrice} ج.م\n`;
+                        context += `  أعلى سعر متاح: ${maxPrice} ج.م\n`;
+                    }
+                    
+                    // إضافة معلومات إضافية للمساعدة
+                    context += `  ملاحظة: هذا المنتج متوفر بعدة مقاسات، كل مقاس له سعر مختلف.\n`;
+                    context += `  المقاسات المتاحة: ${product.sizes.map(s => s.size).join(', ')}\n`;
                 } else {
-                    context += `  - السعر: ${p.sale_price || p.price} ج.م\n`;
+                    // أسعار منتجات السعر الواحد
+                    if (product.price) context += `السعر: ${product.price} ج.م\n`;
+                    if (product.sale_price) context += `السعر بعد الخصم: ${product.sale_price} ج.م\n`;
                 }
-                context += `  - الرابط المباشر: ${url}\n\n`;
+                
+                if (product.category?.name) context += `الفئة: ${product.category.name}\n`;
+                // إضافة الرابط في البيانات التي سيراها النموذج ليستخدمها
+                context += `الرابط للاستخدام في الرد: ${productUrl}\n`;
             });
-        } else {
-            context += `(لا توجد منتجات مسجلة حالياً في قاعدة البيانات)\n`;
+            context += '\n';
         }
 
         context += `تعليمات الرد:
-1. اتكلم بالعامية المصرية الودودة وباحترافية.
-2. لما العميل يسأل عن منتج، اذكر ميزته الأساسية وسعره (لو فيه خصم قوله).
-3. استعمل دايماً زر عرض المنتج بالتنسيق ده: [اسم المنتج](الرابط).
-4. لو العميل سأل عن "أكبر مقاس" أو "أرخص حاجة"، حلل الأسعار اللي فوق ورد بدقة.
-5. لا تذكر رقم الواتساب (01027381559) إلا لو العميل طلب يتواصل مع الإدارة.
-6. ختام الرد دايماً يكون مشجع: "لو محتاج تسأل عن حاجة تانية أنا معاك يا فندم."
-7. ممنوع تطلع بره البيانات اللي في القائمة فوق.`;
+1.  كن ودود وتحدث باللهجة المصرية العامية.
+2.  اجعل ردودك مختصرة ومباشرة قدر الإمكان.
+3.  عند اقتراح أي منتج، يجب أن تذكر نبذة قصيرة عنه ثم تضع رابطه مباشرةً باستخدام تنسيق الماركدون هكذا: [النبذة المختصرة عن المنتج واسمه](رابط المنتج الذي تم تزويدك به).
+4.  مهم جداً: لا تعرض المنتجات في جداول أبداً. كل منتج يجب أن يكون في فقرة خاصة به مع زر "عرض المنتج" تحته.
+5.  عند ذكر أسعار المنتجات متعددة المقاسات، اذكر أقل سعر متاح مع توضيح أنه "ابتداءً من" هذا السعر.
+6.  إذا سأل العميل عن أسعار مقاسات معينة، اذكر الأسعار المحددة لكل مقاس.
+7.  عند السؤال عن "كم سعر المنتج" أو "كم يكلف"، اذكر أقل سعر متاح مع توضيح أنه "ابتداءً من" هذا السعر.
+8.  إذا سأل العميل عن مقاس معين (مثل "كم سعر المقاس الكبير")، اذكر السعر المحدد لذلك المقاس.
+9.  فهم أسئلة المقاسات: عندما يسأل العميل "اكبر مقاس بكام" أو "المقاس الكبير بكام" أو "المقاس الصغير بكام"، يجب أن تذكر المنتجات المتاحة مع أسعار أكبر أو أصغر مقاس حسب السؤال.
+10. إذا سأل العميل عن "اكبر مقاس" أو "المقاس الكبير"، اذكر المنتجات مع أعلى سعر متاح.
+11. إذا سأل العميل عن "اصغر مقاس" أو "المقاس الصغير"، اذكر المنتجات مع أقل سعر متاح.
+12. شجع العميل على طرح المزيد من الأسئلة بقول "لو حابب تفاصيل أكتر، أنا موجود يا فندم." في نهاية الرد.
+13. إذا لم تجد المنتج المطلوب، اقترح أقرب منتج مشابه له.
+14. لا تذكر أي معلومات تواصل مثل رقم الواتساب
+15. لا تنادي العميل بكلمة "يا باشا" بل "يا فندم" (ومش لازم دايمًا تناديه بيها).
+16. استخدم إيموجيز بسيطة وملائمة في الردود لإضافة لمسة ودية، 
+17. قبل اسم المنتج ضيف ▫️
+18. بلاش تحط كلمة "عرض المنتج" يكفي زر عرض المنتج اسفل النبذه فقط 
+19. رقم التواصل (لو العميل طلبه فقط) : 0 10 27381559
+20. استخدم صياغة محايدة أو مذكر، وما تستعملش صيغة المؤنث إلا لو العميلة بنفسها وضحت إنها أنثى أو ظهر من كلامها بشكل واضح انها انثى 
+.`;
 
         return context;
     };
 
-    const sendToAI = async (currentMessages: Message[]): Promise<string> => {
+    // ========================================================================
+    // تعديل: تم تحديث الدالة بالكامل للتعامل مع Groq API
+    // ========================================================================
+    const sendToAI = async (userMessage: string): Promise<string> => {
         const systemPrompt = generateStoreContext();
-        const history = currentMessages.slice(-5).map(m => ({
-            role: m.isUser ? "user" : "assistant",
-            content: m.text
-        }));
+
+        // إعداد الرسائل بتنسيق OpenAI/Groq
+        const groqMessages = [
+            {
+                "role": "system",
+                "content": systemPrompt
+            },
+            ...messages.slice(-5).map(msg => ({
+                "role": msg.isUser ? "user" : "assistant",
+                "content": msg.text
+            })),
+            {
+                "role": "user",
+                "content": userMessage
+            }
+        ];
 
         try {
             const response = await fetch(GROQ_API_URL, {
                 method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${GROQ_API_KEY}`,
-                    'Content-Type': 'application/json'
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${GROQ_API_KEY}`
                 },
                 body: JSON.stringify({
                     model: GROQ_MODEL,
-                    messages: [
-                        { role: "system", content: systemPrompt },
-                        ...history
-                    ],
-                    temperature: 0.5, // تقليل الحرارة لزيادة الدقة في الأسعار
-                    max_tokens: 800
+                    messages: groqMessages,
+                    temperature: 0.7,
+                    max_tokens: 1024,
                 })
             });
 
+            if (!response.ok) {
+                const errorData = await response.json();
+                console.error('API Error:', errorData);
+                throw new Error(`فشل في الاتصال بالخدمة: ${errorData.error?.message || 'خطأ غير معروف'}`);
+            }
+
             const data = await response.json();
-            return data.choices[0]?.message?.content?.trim() || 'بعتذر يا فندم، واجهت مشكلة بسيطة. ممكن تسألني تاني؟';
+            // استخلاص النص من استجابة Groq
+            const textResponse = data?.choices?.[0]?.message?.content;
+
+            return textResponse?.trim() || 'معلش، مافهمتش سؤالك \nممكن توضحلي محتاج ايه بالظبط.';
+
         } catch (error) {
-            return '⚠️ عذراً، فيه مشكلة تقنية في التواصل مع الذكاء الاصطناعي.';
+            console.error('Error calling Groq API:', error);
+            return '⚠️ حدث خطأ تقني.';
         }
     };
+
+
+    useEffect(() => {
+        const container = messagesContainerRef.current;
+        if (!container) return;
+
+        const lastMessageIsFromUser = messages[messages.length - 1]?.isUser;
+        const lastElement = container.lastElementChild;
+
+        if (lastMessageIsFromUser || isLoading) {
+            container.scrollTo({ top: container.scrollHeight, behavior: 'smooth' });
+        } else if (lastElement && lastElement instanceof HTMLElement) {
+            lastElement.scrollIntoView({ behavior: 'smooth', block: 'end' });
+        }
+    }, [messages, isLoading]);
+
+    useEffect(() => { if (isOpen) inputRef.current?.focus(); }, [isOpen]);
 
     const handleSendMessage = async () => {
         if (!inputText.trim() || isLoading) return;
 
-        const userMsg: Message = { id: Date.now().toString(), text: inputText.trim(), isUser: true, timestamp: new Date() };
-        const newMessages = [...messages, userMsg];
-        setMessages(newMessages);
+        const userMessage: Message = { id: Date.now().toString(), text: inputText.trim(), isUser: true, timestamp: new Date() };
+        setMessages(prev => [...prev, userMessage]);
         setInputText('');
         setIsLoading(true);
 
-        const aiResponse = await sendToAI(newMessages);
-        setMessages(prev => [...prev, { id: (Date.now() + 1).toString(), text: aiResponse, isUser: false, timestamp: new Date() }]);
-        setIsLoading(false);
+        try {
+            const aiResponse = await sendToAI(userMessage.text);
+            setTimeout(() => {
+                const botMessage: Message = { id: (Date.now() + 1).toString(), text: aiResponse, isUser: false, timestamp: new Date() };
+                setMessages(prev => [...prev, botMessage]);
+                setIsLoading(false);
+            }, 400);
+        } catch (error) {
+            const errorMessage: Message = { id: (Date.now() + 1).toString(), text: '⚠️ عذراً، حدث خطأ.', isUser: false, timestamp: new Date() };
+            setMessages(prev => [...prev, errorMessage]);
+            setIsLoading(false);
+        }
     };
 
-    useEffect(() => {
-        messagesContainerRef.current?.scrollTo({ top: messagesContainerRef.current.scrollHeight, behavior: 'smooth' });
-    }, [messages, isLoading]);
+    const handleKeyPress = (e: React.KeyboardEvent) => {
+        if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSendMessage(); }
+    };
 
     return (
-        <div className="relative font-sans">
+        <>
             <motion.button
                 onClick={() => setIsOpen(true)}
-                className="fixed bottom-6 left-6 p-4 rounded-full shadow-2xl bg-gradient-to-br from-emerald-500 to-green-700 text-white z-50"
+                className="fixed bottom-6 left-6 p-4 rounded-full shadow-lg transition-all text-white bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 z-50 group"
                 whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.9 }}
+                whileTap={{ scale: 0.95 }}
             >
-                <MessageCircle size={24} />
+                <MessageCircle className="h-6 w-6" />
+                <span className="absolute -top-2 -right-2 w-3 h-3 bg-green-400 rounded-full animate-pulse"></span>
             </motion.button>
 
             <AnimatePresence>
                 {isOpen && (
                     <motion.div
-                        initial={{ opacity: 0, y: 50, scale: 0.9 }}
-                        animate={{ opacity: 1, y: 0, scale: 1 }}
-                        exit={{ opacity: 0, y: 50, scale: 0.9 }}
-                        className="fixed bottom-24 left-6 w-80 h-[450px] bg-zinc-950 border border-white/10 rounded-2xl shadow-2xl z-50 flex flex-col overflow-hidden"
+                        initial={{ opacity: 0, scale: 0.8, y: 20 }}
+                        animate={{ opacity: 1, scale: 1, y: 0 }}
+                        exit={{ opacity: 0, scale: 0.8, y: 20 }}
+                        className="fixed bottom-24 left-6 w-80 h-96 bg-black/90 backdrop-blur-xl rounded-2xl shadow-2xl border border-white/20 z-50 flex flex-col overflow-hidden"
                     >
-                        <div className="p-4 bg-zinc-900 border-b border-white/10 flex justify-between items-center">
-                            <div className="flex items-center gap-2">
-                                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-                                <span className="text-white font-bold text-sm">مساعد السماح الذكي</span>
-                            </div>
-                            <button onClick={() => setIsOpen(false)} className="text-white/50 hover:text-white"><X size={20} /></button>
-                        </div>
-
-                        <div ref={messagesContainerRef} className="flex-1 overflow-y-auto p-4 space-y-4">
-                            {messages.map(m => (
-                                <div key={m.id} className={`flex ${m.isUser ? 'justify-end' : 'justify-start'}`}>
-                                    <div className={`max-w-[85%] p-3 rounded-2xl text-[13px] ${m.isUser ? 'bg-emerald-600 text-white' : 'bg-white/5 text-white border border-white/10'}`}>
-                                        <RenderMessageWithLinks text={m.text} />
-                                    </div>
+                        <div className="flex items-center justify-between p-4 border-b border-white/20 bg-gradient-to-r from-green-600/20 to-emerald-600/20">
+                            <div className="flex items-center gap-3">
+                                <div className="w-8 h-8 bg-gradient-to-r from-green-500 to-emerald-500 rounded-full flex items-center justify-center"><Bot className="h-4 w-4 text-white" /></div>
+                                <div>
+                                    <h3 className="text-white font-semibold text-sm">مساعد {storeData.storeSettings?.store_name || 'معرض السماح - فوربيد'}</h3>
+                                    <p className="text-green-400 text-xs">متصل الآن</p>
                                 </div>
+                            </div>
+                            <button onClick={() => setIsOpen(false)} className="text-white/70 hover:text-white transition-colors p-1"><X className="h-5 w-5" /></button>
+                        </div>
+                        
+                        <div ref={messagesContainerRef} className="flex-1 overflow-y-auto p-4 space-y-4 scrollbar-thin scrollbar-thumb-white/20">
+                            {messages.map((message) => (
+                                <motion.div
+                                    key={message.id}
+                                    initial={{ opacity: 0, y: 10 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    className={`flex ${message.isUser ? 'justify-end' : 'justify-start'}`}
+                                >
+                                    <div className={`flex items-start gap-2 max-w-[95%] ${message.isUser ? 'flex-row-reverse' : 'flex-row'}`}>
+                                        <div className={`w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 mt-1 ${message.isUser ? 'bg-gradient-to-r from-green-600 to-emerald-700' : 'bg-gradient-to-r from-green-500 to-emerald-500'}`}>
+                                            {message.isUser ? <User className="h-3 w-3 text-white" /> : <Bot className="h-3 w-3 text-white" />}
+                                        </div>
+                                        <div className={`flex flex-col gap-1 ${message.isUser ? 'items-end' : 'items-start'}`}>
+                                            <div className={`rounded-2xl px-3 py-2 text-[13.6px] flex flex-col ${message.isUser ? 'bg-gradient-to-r from-green-600 to-emerald-700 text-white' : 'bg-white/10 text-white border border-white/20'}`}>
+                                                <RenderMessageWithLinks text={message.text} />
+                                                {!message.isUser && message.id !== '1' && (
+                                                    <a href="https://wa.me/201013210146" target="_blank" rel="noopener noreferrer" className="mt-3 flex items-center justify-center gap-2 text-xs bg-green-600/30 hover:bg-green-600/50 text-white font-semibold py-1.5 px-3 rounded-lg transition-all border border-green-500/50">
+                                                        <MessageSquare className="w-3 h-3" /> تواصل واتساب مع البائع
+                                                    </a>
+                                                )}
+                                            </div>
+                                            <p className="text-xs text-gray-400 opacity-80 px-1">
+                                                {message.timestamp.toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' })}
+                                            </p>
+                                        </div>
+                                    </div>
+                                </motion.div>
                             ))}
-                            {isLoading && <div className="text-emerald-500 text-[10px] animate-pulse">جاري فحص المنتجات...</div>}
+
+                            {isLoading && (
+                                <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="flex justify-start">
+                                    <div className="flex items-start gap-2">
+                                        <div className="w-6 h-6 bg-gradient-to-r from-green-500 to-emerald-500 rounded-full flex items-center justify-center"><Bot className="h-3 w-3 text-white" /></div>
+                                        <div className="bg-white/10 rounded-2xl px-3 py-2 border border-white/20">
+                                            <div className="flex items-center">
+                                            <div className="w-1.5 h-1.5 bg-white/50 rounded-full animate-bounce mx-1"></div>
+                                           <div className="w-1.5 h-1.5 bg-white/50 rounded-full animate-bounce mx-1" style={{ animationDelay: '0.2s' }}></div>
+                                           <div className="w-1.5 h-1.5 bg-white/50 rounded-full animate-bounce mx-1" style={{ animationDelay: '0.4s' }}></div>
+                                          </div>
+
+                                        </div>
+                                    </div>
+                                </motion.div>
+                            )}
                         </div>
 
-                        <div className="p-3 bg-zinc-900/50">
+                        <div className="p-4 border-t border-white/20 bg-black/50">
                             <div className="flex gap-2">
                                 <input
+                                    ref={inputRef}
+                                    type="text"
                                     value={inputText}
                                     onChange={(e) => setInputText(e.target.value)}
-                                    onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
-                                    placeholder="اسأل عن مقاس أو سعر..."
-                                    className="flex-1 bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-white text-xs outline-none focus:border-emerald-500 transition-colors"
+                                    onKeyPress={handleKeyPress}
+                                    placeholder="اسأل عن أي مفروشات..."
+                                    disabled={isLoading}
+                                    className="flex-1 bg-white/10 text-white placeholder-white/50 rounded-full px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 border border-white/20 disabled:opacity-50"
                                 />
-                                <button onClick={handleSendMessage} className="p-2 bg-emerald-600 rounded-xl text-white hover:bg-emerald-500 transition-colors">
-                                    <Send size={16} />
+                                <button
+                                    onClick={handleSendMessage}
+                                    disabled={!inputText.trim() || isLoading}
+                                    className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed text-white p-2 rounded-full transition-all flex items-center justify-center"
+                                >
+                                    <Send className="h-4 w-4" />
                                 </button>
                             </div>
                         </div>
                     </motion.div>
                 )}
             </AnimatePresence>
-        </div>
+
+            <AnimatePresence>
+                {isOpen && <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-black/20 z-40 md:hidden" onClick={() => setIsOpen(false)} />}
+            </AnimatePresence>
+        </>
     );
 }
+
