@@ -16,7 +16,7 @@ interface Message {أ
 // =====================
 const GROQ_API_KEY = "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"; 
 const GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions"; 
-const GROQ_MODEL = "openai/gpt-oss-120b"; 
+const GROQ_MODEL = "llama-3.3-70b-versatile"; 
 
 const RenderMessageWithLinks = ({ text }: { text: string }) => {
     const linkRegex = /\[([^\]]+)\]\(([^)]+)\)/g;
@@ -227,7 +227,7 @@ export default function AIChatBot() {
 
             if (!response.ok) {
                 const errorData = await response.json();
-                console.error('Groq API Error:', errorData);
+                console.error('Groq API Error Details:', JSON.stringify(errorData, null, 2));
                 throw new Error(`فشل في الاتصال بالخدمة: ${errorData.error?.message || 'خطأ غير معروف'}`);
             }
 
