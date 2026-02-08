@@ -16,7 +16,7 @@ interface Message {أ
 // =====================
 const GROQ_API_KEY = "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"; 
 const GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions"; 
-const GROQ_MODEL = "llama-3.3-70b-versatile"; 
+const GROQ_MODEL = "openai/gpt-oss-120b"; 
 
 const RenderMessageWithLinks = ({ text }: { text: string }) => {
     const linkRegex = /\[([^\]]+)\]\(([^)]+)\)/g;
@@ -114,63 +114,25 @@ export default function AIChatBot() {
         let context = `أنت مساعد ذكي لمعرض "${storeSettings?.store_name || 'معرض السماح - فوربيد'}".\n\n`;
 
         if (products.length > 0) {
-            context += `المنتجات المتاحة في المعرض:\n`;
-            products.forEach(product => {
+            context += `قائمة مختصرة للمنتجات (أهم 40 منتج):\n`;
+            // نأخذ أول 40 منتج فقط لتجنب تجاوز حدود الـ API (Rate Limit)
+            products.slice(0, 40).forEach(product => {
                 const productUrl = `https://alsamah-store.com/product/${product.id}`;
-                context += `\n--- ${product.title} ---\n`;
-                context += `الوصف: ${product.description || 'لا يوجد وصف متاح'}\n`;
+                context += `▫️ ${product.title}`;
                 
-                // معالجة الأسعار المتعددة
                 if (product.has_multiple_sizes && product.sizes && product.sizes.length > 0) {
-                    context += `الأسعار المتاحة (متعددة المقاسات):\n`;
-                    
-                    // ترتيب المقاسات حسب السعر
-                    const sortedSizes = product.sizes.sort((a, b) => {
-                        const priceA = parseFloat(a.sale_price as any) || parseFloat(a.price as any);
-                        const priceB = parseFloat(b.sale_price as any) || parseFloat(b.price as any);
-                        return priceA - priceB;
-                    });
-                    
-                    sortedSizes.forEach(size => {
-                        if (size.sale_price) {
-                            context += `  - مقاس ${size.size}: ${size.sale_price} ج.م (بعد الخصم) - السعر الأصلي: ${size.price} ج.م\n`;
-                        } else {
-                            context += `  - مقاس ${size.size}: ${size.price} ج.م\n`;
-                        }
-                    });
-                    
-                    // إضافة أقل وأعلى سعر متاح
-                    const validPrices = product.sizes
-                        .map(s => parseFloat(s.price as any))
-                        .filter(p => !isNaN(p) && p > 0);
-                    const validSalePrices = product.sizes
-                        .map(s => parseFloat(s.sale_price as any))
-                        .filter(p => !isNaN(p) && p > 0);
-                    
-                    if (validSalePrices.length > 0) {
-                        const minSalePrice = Math.min(...validSalePrices);
-                        const maxSalePrice = Math.max(...validSalePrices);
-                        context += `  أقل سعر متاح: ${minSalePrice} ج.م (بعد الخصم)\n`;
-                        context += `  أعلى سعر متاح: ${maxSalePrice} ج.م (بعد الخصم)\n`;
-                    } else if (validPrices.length > 0) {
-                        const minPrice = Math.min(...validPrices);
-                        const maxPrice = Math.max(...validPrices);
-                        context += `  أقل سعر متاح: ${minPrice} ج.م\n`;
-                        context += `  أعلى سعر متاح: ${maxPrice} ج.م\n`;
-                    }
-                    
-                    // إضافة معلومات إضافية للمساعدة
-                    context += `  ملاحظة: هذا المنتج متوفر بعدة مقاسات، كل مقاس له سعر مختلف.\n`;
-                    context += `  المقاسات المتاحة: ${product.sizes.map(s => s.size).join(', ')}\n`;
+                    const validPrices = product.sizes.map(s => parseFloat(s.price as any)).filter(p => !isNaN(p) && p > 0);
+                    const validSalePrices = product.sizes.map(s => parseFloat(s.sale_price as any)).filter(p => !isNaN(p) && p > 0);
+                    const minPrice = validSalePrices.length > 0 ? Math.min(...validSalePrices) : (validPrices.length > 0 ? Math.min(...validPrices) : null);
+                    if (minPrice) context += ` | يبدأ من ${minPrice} ج.م`;
+                    context += ` | المقاسات: ${product.sizes.map(s => s.size).join(', ')}`;
                 } else {
-                    // أسعار منتجات السعر الواحد
-                    if (product.price) context += `السعر: ${product.price} ج.م\n`;
-                    if (product.sale_price) context += `السعر بعد الخصم: ${product.sale_price} ج.م\n`;
+                    const price = product.sale_price || product.price;
+                    if (price) context += ` | السعر: ${price} ج.م`;
                 }
                 
-                if (product.category?.name) context += `الفئة: ${product.category.name}\n`;
-                // إضافة الرابط في البيانات التي سيراها النموذج ليستخدمها
-                context += `الرابط للاستخدام في الرد: ${productUrl}\n`;
+                if (product.category?.name) context += ` | الفئة: ${product.category.name}`;
+                context += ` | الرابط: ${productUrl}\n`;
             });
             context += '\n';
         }
@@ -227,7 +189,7 @@ export default function AIChatBot() {
 
             if (!response.ok) {
                 const errorData = await response.json();
-                console.error('Groq API Error Details:', JSON.stringify(errorData, null, 2));
+                console.error('Groq API Error:', errorData);
                 throw new Error(`فشل في الاتصال بالخدمة: ${errorData.error?.message || 'خطأ غير معروف'}`);
             }
 
