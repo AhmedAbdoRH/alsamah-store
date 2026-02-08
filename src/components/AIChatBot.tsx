@@ -14,7 +14,7 @@ interface Message {
 // =====================
 // إعدادات Groq API (بديل Gemini - مجاني)
 // =====================
-const GROQ_API_KEY = "PUT_YOUR_API_KEY_HERE";
+const GROQ_API_KEY = "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";
 
 const RenderMessageWithLinks = ({ text }: { text: string }) => {
     const linkRegex = /\[([^\]]+)\]\(([^)]+)\)/g;
