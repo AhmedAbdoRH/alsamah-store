@@ -12,11 +12,11 @@ interface Message {أ
 }
 
 // =====================
-// إعدادات Groq API
+// إعدادات Gemini API
 // =====================
-const GROQ_API_KEY = "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"; 
-const GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions"; 
-const GROQ_MODEL = "openai/gpt-oss-120b"; 
+const GEMINI_API_KEY = "AIzaSyA-Tqgy0Fjq1JGiNW7ZC2LJyrNL-YotofI"; 
+const GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent";
+const GEMINI_MODEL = "gemini-3-flash-preview";
 
 const RenderMessageWithLinks = ({ text }: { text: string }) => {
     const linkRegex = /\[([^\]]+)\]\(([^)]+)\)/g;
@@ -202,56 +202,56 @@ export default function AIChatBot() {
     };
 
     // ========================================================================
-    // تعديل: تم تحديث الدالة بالكامل للتعامل مع Groq API
+    // تعديل: تم تحديث الدالة بالكامل للتعامل مع Gemini API
     // ========================================================================
     const sendToAI = async (userMessage: string): Promise<string> => {
         const systemPrompt = generateStoreContext();
 
-        // إعداد الرسائل بتنسيق OpenAI/Groq
-        const groqMessages = [
-            {
-                "role": "system",
-                "content": systemPrompt
-            },
-            ...messages.slice(-5).map(msg => ({
-                "role": msg.isUser ? "user" : "assistant",
-                "content": msg.text
-            })),
+        // Gemini يتطلب تنسيقًا مختلفًا للرسائل
+        const geminiMessages = [
+            // تعليمات النظام
             {
                 "role": "user",
-                "content": userMessage
+                "parts": [{ "text": systemPrompt }]
+            },
+            {
+                "role": "model",
+                "parts": [{ "text": "تمام، أنا جاهز لمساعدة العملاء." }] // تمهيد للمحادثة
+            },
+            // الرسالة الفعلية من المستخدم
+            {
+                "role": "user",
+                "parts": [{ "text": userMessage }]
             }
         ];
 
         try {
-            const response = await fetch(GROQ_API_URL, {
+            const response = await fetch(`${GEMINI_API_URL}?key=${GEMINI_API_KEY}`, {
                 method: 'POST',
-                headers: { 
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${GROQ_API_KEY}`
-                },
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    model: GROQ_MODEL,
-                    messages: groqMessages,
-                    temperature: 0.7,
-                    max_tokens: 1024,
+                    contents: geminiMessages,
+                    generationConfig: {
+                        temperature: 0.7,
+                        maxOutputTokens: 1024,
+                    }
                 })
             });
 
             if (!response.ok) {
                 const errorData = await response.json();
                 console.error('API Error:', errorData);
-                throw new Error(`فشل في الاتصال بالخدمة: ${errorData.error?.message || 'خطأ غير معروف'}`);
+                throw new Error(`فشل في الاتصال بالخدمة: ${errorData.error.message}`);
             }
 
             const data = await response.json();
-            // استخلاص النص من استجابة Groq
-            const textResponse = data?.choices?.[0]?.message?.content;
+            // استخلاص النص من استجابة Gemini
+            const textResponse = data?.candidates?.[0]?.content?.parts?.[0]?.text;
 
-            return textResponse?.trim() || 'معلش، مافهمتش سؤالك \nممكن توضحلي محتاج ايه بالظبط.';
+            return textResponse?.trim() || 'معلش، مافهمتش سؤالك n/ممكن توضحلي محتاج ايه بالظبط.';
 
         } catch (error) {
-            console.error('Error calling Groq API:', error);
+            console.error('Error calling Gemini API:', error);
             return '⚠️ حدث خطأ تقني.';
         }
     };
@@ -407,4 +407,3 @@ export default function AIChatBot() {
         </>
     );
 }
-
