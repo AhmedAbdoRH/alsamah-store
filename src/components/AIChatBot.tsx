@@ -12,11 +12,11 @@ interface Message {أ
 }
 
 // =====================
-// إعدادات Gemini API
+// إعدادات Groq API
 // =====================
-const GEMINI_API_KEY = "AIzaSyA-Tqgy0Fjq1JGiNW7ZC2LJyrNL-YotofI"; 
-const GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent";
-const GEMINI_MODEL = "gemini-3-flash-preview";
+const GROQ_API_KEY = "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"; 
+const GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions"; 
+const GROQ_MODEL = "openai/gpt-oss-120b"; 
 
 const RenderMessageWithLinks = ({ text }: { text: string }) => {
     const linkRegex = /\[([^\]]+)\]\(([^)]+)\)/g;
@@ -202,56 +202,42 @@ export default function AIChatBot() {
     };
 
     // ========================================================================
-    // تعديل: تم تحديث الدالة بالكامل للتعامل مع Gemini API
+    // تعديل: تم تحديث الدالة للتعامل مع Groq API (OpenAI Compatible)
     // ========================================================================
     const sendToAI = async (userMessage: string): Promise<string> => {
         const systemPrompt = generateStoreContext();
 
-        // Gemini يتطلب تنسيقًا مختلفًا للرسائل
-        const geminiMessages = [
-            // تعليمات النظام
-            {
-                "role": "user",
-                "parts": [{ "text": systemPrompt }]
-            },
-            {
-                "role": "model",
-                "parts": [{ "text": "تمام، أنا جاهز لمساعدة العملاء." }] // تمهيد للمحادثة
-            },
-            // الرسالة الفعلية من المستخدم
-            {
-                "role": "user",
-                "parts": [{ "text": userMessage }]
-            }
-        ];
-
         try {
-            const response = await fetch(`${GEMINI_API_URL}?key=${GEMINI_API_KEY}`, {
+            const response = await fetch(GROQ_API_URL, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${GROQ_API_KEY}`
+                },
                 body: JSON.stringify({
-                    contents: geminiMessages,
-                    generationConfig: {
-                        temperature: 0.7,
-                        maxOutputTokens: 1024,
-                    }
+                    model: GROQ_MODEL,
+                    messages: [
+                        { role: "system", content: systemPrompt },
+                        { role: "user", content: userMessage }
+                    ],
+                    temperature: 0.7,
+                    max_tokens: 1024,
                 })
             });
 
             if (!response.ok) {
                 const errorData = await response.json();
-                console.error('API Error:', errorData);
-                throw new Error(`فشل في الاتصال بالخدمة: ${errorData.error.message}`);
+                console.error('Groq API Error:', errorData);
+                throw new Error(`فشل في الاتصال بالخدمة: ${errorData.error?.message || 'خطأ غير معروف'}`);
             }
 
             const data = await response.json();
-            // استخلاص النص من استجابة Gemini
-            const textResponse = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+            const textResponse = data?.choices?.[0]?.message?.content;
 
             return textResponse?.trim() || 'معلش، مافهمتش سؤالك n/ممكن توضحلي محتاج ايه بالظبط.';
 
         } catch (error) {
-            console.error('Error calling Gemini API:', error);
+            console.error('Error calling Groq API:', error);
             return '⚠️ حدث خطأ تقني.';
         }
     };
