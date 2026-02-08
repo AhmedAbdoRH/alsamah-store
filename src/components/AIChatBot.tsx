@@ -54,7 +54,7 @@ interface Message {
 // =====================
 // إعدادات Groq API
 // =====================
-const GROQ_API_KEY = ""; // ضع مفتاح Groq الخاص بك هنا (سيتم استخدامه تلقائياً في البيئة)
+const GROQ_API_KEY = "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"; // ضع مفتاح Groq الخاص بك هنا (سيتم استخدامه تلقائياً في البيئة)
 const GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions";
 const GROQ_MODEL = "llama-3.3-70b-versatile"; 
 
