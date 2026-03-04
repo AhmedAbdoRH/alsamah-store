@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '../lib/supabase'; // تأكد من أن مسار supabase صحيح
 import type { Service, Category, StoreSettings } from '../types/database'; // تأكد من أن مسار الأنواع صحيح
 
-interface Message {أ
+interface Message {
     id: string;
     text: string;
     isUser: boolean;
@@ -14,7 +14,7 @@ interface Message {أ
 // =====================
 // إعدادات Groq API
 // =====================
-const GROQ_API_KEY = "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"; 
+const GROQ_API_KEY = "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"; 
 const GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions"; 
 const GROQ_MODEL = "openai/gpt-oss-120b"; 
 

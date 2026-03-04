@@ -7,7 +7,9 @@
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "migrate": "node scripts/migrate-database.js",
+    "migrate:interactive": "node scripts/interactive-migrate.js"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.39.7",
