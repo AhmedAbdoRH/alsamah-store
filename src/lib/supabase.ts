@@ -1,23 +1,36 @@
 import { createClient } from '@supabase/supabase-js';
 
-// Read from Vite env (define in .env.local)
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string;
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string;
+let supabaseClient: ReturnType<typeof createClient> | null = null;
 
-// Add validation to ensure the environment variables are loaded
-if (!supabaseUrl) {
-  console.error('Missing VITE_SUPABASE_URL environment variable');
-  throw new Error('Missing VITE_SUPABASE_URL environment variable');
-}
+export const getSupabaseClient = () => {
+  if (!supabaseClient) {
+    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string;
+    const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string;
+    
+    if (!supabaseUrl || !supabaseAnonKey) {
+      throw new Error('Missing Supabase environment variables');
+    }
+    
+    console.log('Creating fresh Supabase client for:', supabaseUrl);
+    
+    supabaseClient = createClient(supabaseUrl, supabaseAnonKey, {
+      db: { 
+        schema: 'public' 
+      },
+      global: { 
+        headers: { 
+          'Cache-Control': 'no-cache, no-store, must-revalidate'
+        } 
+      }
+    });
+  }
+  return supabaseClient;
+};
 
-if (!supabaseAnonKey) {
-  console.error('Missing VITE_SUPABASE_ANON_KEY environment variable');
-  throw new Error('Missing VITE_SUPABASE_ANON_KEY environment variable');
-}
+export const supabase = getSupabaseClient();
 
-console.log('Supabase URL:', supabaseUrl);
-console.log('Supabase Anon Key loaded:', !!supabaseAnonKey);
-
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
-
-// Do NOT expose service role in the browser. If needed, handle admin ops via server.
+// Force refresh function
+export const refreshSupabaseClient = () => {
+  supabaseClient = null;
+  return getSupabaseClient();
+};

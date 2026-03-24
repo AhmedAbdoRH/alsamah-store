@@ -38,17 +38,25 @@ export default function Services() {
       setIsLoading(true);
       setError(null);
 
-      const { data, error } = await supabase
+      const { data: servicesData, error: servicesError } = await supabase
         .from('services')
-        .select(`
-          *,
-          category:categories(*),
-          sizes:product_sizes(*)
-        `)
+        .select('*')
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
-      setServices(data || []);
+      if (servicesError) throw servicesError;
+
+      const { data: sizesData, error: sizesError } = await supabase
+        .from('product_sizes')
+        .select('*');
+
+      if (sizesError) throw sizesError;
+
+      const servicesWithSizes = (servicesData || []).map(service => ({
+        ...service,
+        sizes: (sizesData || []).filter(size => String(size.service_id) === String(service.id))
+      }));
+
+      setServices(servicesWithSizes);
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -129,7 +137,7 @@ export default function Services() {
             <ServiceCard
               key={service.id}
               id={service.id}
-              title={service.name}
+              title={service.title}
               description={service.description}
               imageUrl={service.image_url}
               price={service.price}

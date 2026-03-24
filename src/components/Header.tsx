@@ -71,7 +71,6 @@ export default function Header({ storeSettings }: HeaderProps) {
         .from('services')
         .select(`
           *,
-          category:categories(*),
           product_images(image_url)
         `)
         .or(`title.ilike.%${query}%,description.ilike.%${query}%`)
@@ -84,9 +83,11 @@ export default function Header({ storeSettings }: HeaderProps) {
         return;
       }
       
-      // Transform the data to handle images properly
+      // Transform the data to handle images properly and look up category from local state
       const formattedServices = services.map(service => ({
         ...service,
+        // Look up category from already-loaded categories state
+        category: categories.find(c => c.id === service.category_id) || null,
         // Use the first product image if available, otherwise fallback to the main image_url
         displayImage: service.product_images?.[0]?.image_url || service.image_url || '/placeholder-product.jpg'
       }));

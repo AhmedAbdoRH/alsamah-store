@@ -45,18 +45,29 @@ export default function ProductDetails() {
       setIsLoading(true);
       setError(null);
 
-      const { data, error: fetchError } = await supabase
+      const { data: serviceData, error: fetchError } = await supabase
         .from('services')
-        .select('*, sizes:product_sizes(*)')
+        .select('*')
         .eq('id', serviceId)
         .single();
 
       if (fetchError) throw fetchError;
-      if (!data) throw new Error('المنتج غير موجود');
+      if (!serviceData) throw new Error('المنتج غير موجود');
 
-      setService(data);
-      if (data.has_multiple_sizes && data.sizes && data.sizes.length > 0) {
-        setSelectedSize(data.sizes[0]);
+      // Fetch sizes separately
+      const { data: sizesData, error: sizesError } = await supabase
+        .from('product_sizes')
+        .select('*')
+        .eq('service_id', serviceId);
+
+      const productWithSizes = { 
+        ...serviceData, 
+        sizes: sizesData || [] 
+      };
+
+      setService(productWithSizes);
+      if (productWithSizes.has_multiple_sizes && productWithSizes.sizes && productWithSizes.sizes.length > 0) {
+        setSelectedSize(productWithSizes.sizes[0]);
       }
     } catch (err: any) {
       setError(err.message);
@@ -68,14 +79,33 @@ export default function ProductDetails() {
   const fetchSuggested = async () => {
     if (!service) return;
     
-    const { data } = await supabase
-      .from('services')
-      .select('*, sizes:product_sizes(*)')
-      .eq('category_id', service.category_id)
-      .neq('id', id)
-      .limit(10);
-      
-    setSuggested(data || []);
+    try {
+      const { data: suggestedData, error: suggestedError } = await supabase
+        .from('services')
+        .select('*')
+        .eq('category_id', service.category_id)
+        .neq('id', id)
+        .limit(10);
+        
+      if (suggestedError) throw suggestedError;
+
+      const { data: sizesData, error: sizesError } = await supabase
+        .from('product_sizes')
+        .select('*')
+        .in('service_id', (suggestedData || []).map(s => s.id));
+
+      if (sizesError) throw sizesError;
+
+      const suggestedWithSizes = (suggestedData || []).map(item => ({
+        ...item,
+        sizes: (sizesData || []).filter(size => String(size.service_id) === String(service.id))
+      }));
+        
+      setSuggested(suggestedWithSizes);
+    } catch (err) {
+      console.error("Error fetching suggested products:", err);
+      setSuggested([]);
+    }
   };
 
   const handleContact = () => {
@@ -288,7 +318,6 @@ export default function ProductDetails() {
 
               return (
                 <div
-                  key={item.id}
                   className="
                     min-w-[160px] max-w-[180px]
                     md:min-w-[220px] md:max-w-[260px]

@@ -84,15 +84,21 @@ export default function AIChatBot() {
 
     const fetchStoreData = async () => {
         try {
-            const { data: products, error: productsError } = await supabase
+            const { data: productsData, error: productsError } = await supabase
                 .from('services')
-                .select(`
-                    *,
-                    category:categories(*),
-                    sizes:product_sizes(*)
-                `)
+                .select('*')
                 .order('created_at', { ascending: false });
             if (productsError) throw productsError;
+
+            const { data: sizesData, error: sizesError } = await supabase
+                .from('product_sizes')
+                .select('*');
+            if (sizesError) throw sizesError;
+
+            const productsWithSizes = (productsData || []).map(product => ({
+                ...product,
+                sizes: (sizesData || []).filter(size => String(size.service_id) === String(product.id))
+            }));
             
             // Debug: Log the actual data to see what we're getting
             console.log('ChatBot Debug - Products with sizes:', products);
@@ -131,7 +137,8 @@ export default function AIChatBot() {
                     if (price) context += ` | السعر: ${price} ج.م`;
                 }
                 
-                if (product.category?.name) context += ` | الفئة: ${product.category.name}`;
+                const categoryName = storeData.categories.find(c => c.id === product.category_id)?.name;
+                if (categoryName) context += ` | الفئة: ${categoryName}`;
                 context += ` | الرابط: ${productUrl}\n`;
             });
             context += '\n';

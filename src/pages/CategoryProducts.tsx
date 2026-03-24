@@ -46,7 +46,19 @@ export default function CategoryProducts() {
         .eq('category_id', categoryId);
 
       if (servicesError) throw servicesError;
-      setServices(servicesData || []);
+
+      // Fetch all sizes for these services
+      const { data: sizesData, error: sizesError } = await supabase
+        .from('product_sizes')
+        .select('*')
+        .in('service_id', (servicesData || []).map(s => s.id));
+
+      const servicesWithSizes = (servicesData || []).map(service => ({
+        ...service,
+        sizes: (sizesData || []).filter(size => String(size.service_id) === String(service.id))
+      }));
+
+      setServices(servicesWithSizes);
 
       // Fetch subcategories for this category (if table exists)
       const { data: subcats, error: subErr } = await supabase
@@ -158,8 +170,10 @@ export default function CategoryProducts() {
                   title={service.title}
                   description={service.description || ''}
                   imageUrl={service.image_url || ''}
-                  price={service.price || ''}
-                  salePrice={service.sale_price || null}
+                  price={service.price}
+                  salePrice={service.sale_price}
+                  has_multiple_sizes={service.has_multiple_sizes}
+                  sizes={service.sizes}
                 />
               ))}
             </div>

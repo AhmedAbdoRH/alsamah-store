@@ -45,23 +45,32 @@ export default function Services() {
       setIsLoading(true);
       setError(null);
 
-      // Fetch all services with their categories and subcategories
-      const { data, error } = await supabase
+      // Fetch all services
+      const { data: servicesData, error: servicesError } = await supabase
         .from('services')
-        .select(`
-          *,
-          category:categories(*),
-          subcategory:subcategories(*),
-          sizes:product_sizes(*)
-        `)
+        .select('*')
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
-      setServices(data || []);
+      if (servicesError) throw servicesError;
+
+      // Fetch all product sizes separately to avoid relationship errors
+      const { data: sizesData, error: sizesError } = await supabase
+        .from('product_sizes')
+        .select('*');
+
+      if (sizesError) throw sizesError;
+
+      // Map sizes to services client-side
+      const servicesWithSizes = (servicesData || []).map(service => ({
+        ...service,
+        sizes: (sizesData || []).filter(size => String(size.service_id) === String(service.id))
+      }));
+
+      setServices(servicesWithSizes);
 
       // Check if we have any featured or best seller products
-      const hasFeatured = data?.some(service => service.is_featured) || false;
-      const hasBestSellers = data?.some(service => service.is_best_seller) || false;
+      const hasFeatured = servicesWithSizes.some(service => service.is_featured) || false;
+      const hasBestSellers = servicesWithSizes.some(service => service.is_best_seller) || false;
       
       setHasFeaturedProducts(hasFeatured);
       setHasBestSellerProducts(hasBestSellers);

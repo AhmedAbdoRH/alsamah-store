@@ -1,5 +1,6 @@
 import { Helmet } from 'react-helmet-async';
 import FacebookButton from './FacebookButton';
+import WhatsAppButton from './WhatsAppButton';
 
 const MaintenancePage = () => {
   return (
@@ -74,6 +75,8 @@ const MaintenancePage = () => {
                 facebookUrl="https://www.facebook.com/samah.furnitures"
                 className="scale-110 transform transition-transform hover:scale-105"
               />
+              
+              <WhatsAppButton />
               
               <button 
                 className="telegram-button"

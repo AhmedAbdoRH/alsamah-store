@@ -181,18 +181,28 @@ export default function Products() {
     try {
       setIsLoading(true);
       setError(null);
-      const { data, error } = await supabase
+      
+      const { data: servicesData, error: servicesError } = await supabase
         .from('services')
-        .select('*, sizes:product_sizes(*)')
+        .select('*')
         .order('created_at', { ascending: false });
 
-      if (error) {
-        console.error("Error fetching services:", error);
-        throw error;
-      }
+      if (servicesError) throw servicesError;
+
+      const { data: sizesData, error: sizesError } = await supabase
+        .from('product_sizes')
+        .select('*');
+
+      if (sizesError) throw sizesError;
+
+      const servicesWithSizes = (servicesData || []).map(service => ({
+        ...service,
+        sizes: (sizesData || []).filter(size => String(size.service_id) === String(service.id))
+      }));
+
       // Log the data to be absolutely sure what we are receiving
-      console.log("FINAL ATTEMPT - Fetched Services Data:", data);
-      setServices(data || []);
+      console.log("FINAL ATTEMPT - Fetched Services Data:", servicesWithSizes);
+      setServices(servicesWithSizes);
     } catch (err: any) {
       setError(err.message);
     } finally {

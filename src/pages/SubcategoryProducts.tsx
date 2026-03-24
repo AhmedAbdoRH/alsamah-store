@@ -69,7 +69,19 @@ export default function SubcategoryProducts() {
         .select('*')
         .eq('subcategory_id', subcategoryId);
       if (servicesError) throw servicesError;
-      setServices(servicesData || []);
+
+      // Fetch all sizes for these services
+      const { data: sizesData, error: sizesError } = await supabase
+        .from('product_sizes')
+        .select('*')
+        .in('service_id', (servicesData || []).map(s => s.id));
+
+      const servicesWithSizes = (servicesData || []).map(service => ({
+        ...service,
+        sizes: (sizesData || []).filter(size => String(size.service_id) === String(service.id))
+      }));
+
+      setServices(servicesWithSizes);
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -160,8 +172,10 @@ export default function SubcategoryProducts() {
                   title={service.title}
                   description={service.description || ''}
                   imageUrl={service.image_url || ''}
-                  price={service.price || ''}
-                  salePrice={service.sale_price || null}
+                  price={service.price}
+                  salePrice={service.sale_price}
+                  has_multiple_sizes={service.has_multiple_sizes}
+                  sizes={service.sizes}
                 />
               ))}
             </div>

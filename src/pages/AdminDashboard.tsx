@@ -392,10 +392,20 @@ export default function AdminDashboard({ onSettingsUpdate }: AdminDashboardProps
 
       const { data: servicesData, error: servicesError } = await supabase
         .from('services')
-        .select(`*, category:categories(*), sizes:product_sizes(*)`)
+        .select(`*`)
         .order('created_at', { ascending: false });
       if (servicesError) throw servicesError;
-      setServices(servicesData || []);
+
+      const { data: sizesData, error: sizesError } = await supabase
+        .from('product_sizes')
+        .select(`*`);
+      if (sizesError) throw sizesError;
+
+      const servicesWithSizes = (servicesData || []).map(service => ({
+        ...service,
+        sizes: (sizesData || []).filter(size => String(size.service_id) === String(service.id))
+      }));
+      setServices(servicesWithSizes);
 
       const { data: subcatsData, error: subcatsError } = await supabase
         .from('subcategories')
