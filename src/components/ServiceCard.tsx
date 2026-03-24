@@ -26,7 +26,7 @@ export default function ProductCard({ title, description, imageUrl, price, saleP
   const [isAdded, setIsAdded] = useState(false);
 
   // Smart pricing system with intelligent fallbacks
-  const { displayPrice, displaySalePrice, priceRange, hasMultiplePrices, pricingStrategy } = useMemo(() => {
+  const { displayPrice, displaySalePrice, hasMultiplePrices, pricingStrategy } = useMemo(() => {
     // Helper function to generate smart pricing based on product name
     const generateSmartPricing = (productTitle: string) => {
       const title = productTitle.toLowerCase();
@@ -162,15 +162,50 @@ export default function ProductCard({ title, description, imageUrl, price, saleP
     <div className="group relative bg-secondary/5 backdrop-blur-md rounded-xl border border-secondary/20 overflow-hidden transition-all duration-150 hover:scale-105 hover:bg-secondary/10">
       <Link to={`/product/${id}`} className="block">
         <div className="relative aspect-[4/3] w-full">
-          <img
-            src={imageUrl || '/placeholder-product.jpg'}
-            alt={title}
-            className="absolute inset-0 w-full h-full object-cover"
-            onError={(e) => {
-              const target = e.target as HTMLImageElement;
-              target.src = '/placeholder-product.jpg';
-            }}
-          />
+          {!imageUrl ? (
+            // Fallback UI for missing images
+            <div className="absolute inset-0 w-full h-full bg-gradient-to-br from-secondary/20 to-secondary/40 flex flex-col items-center justify-center p-6">
+              <img 
+                src="/logo.png" 
+                alt="معرض السماح للمفروشات" 
+                className="w-16 h-16 mb-4 opacity-80"
+                onError={(e) => {
+                  const target = e.target as HTMLImageElement;
+                  target.style.display = 'none';
+                }}
+              />
+              <div className="text-center">
+                <p className="text-secondary font-semibold text-sm mb-2">
+                  سيتم رفع صور المنتج قريباً
+                </p>
+                <p className="text-secondary/60 text-xs">
+                  الموقع تحت الصيانة
+                </p>
+              </div>
+            </div>
+          ) : (
+            <img
+              src={imageUrl}
+              alt={title}
+              className="absolute inset-0 w-full h-full object-cover"
+              onError={(e) => {
+                const target = e.target as HTMLImageElement;
+                // Replace with fallback UI on error
+                const parent = target.parentElement;
+                if (parent) {
+                  parent.innerHTML = `
+                    <div class="absolute inset-0 w-full h-full bg-gradient-to-br from-secondary/20 to-secondary/40 flex flex-col items-center justify-center p-6">
+                      <img src="/logo.png" alt="معرض السماح للمفروشات" class="w-16 h-16 mb-4 opacity-80" onerror="this.style.display='none'" />
+                      <div class="text-center">
+                        <p class="text-secondary font-semibold text-sm mb-2">سيتم رفع صور المنتج قريباً</p>
+                        <p class="text-secondary/60 text-xs">الموقع تحت الصيانة</p>
+                      </div>
+                    </div>
+                  `;
+                }
+              }}
+            />
+          )}
           <div className="absolute inset-0 bg-gradient-to-t from-primary/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-150" />
         </div>
         <div className="p-6">
