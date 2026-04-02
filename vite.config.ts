@@ -38,15 +38,21 @@ export default defineConfig({
       // Avoid aggressive caching in dev; rely on HMR
       'Cache-Control': 'no-store',
     },
-    hmr: {
-      port: 5173,
-    },
     watch: {
-      // Ignore files that may be updated by external tools to prevent reload loops
+      // Ignore files that may be updated by editors, tools, or local diagnostics.
       ignored: [
         '**/dist/**',
+        '**/.bolt/**',
+        '**/.idx/**',
+        '**/.vscode/**',
         '**/public/sitemap.xml',
         '**/public/robots.txt',
+        '**/*.bak',
+        '**/*.tmp',
+        '**/*.temp',
+        '**/*.swp',
+        '**/*.orig',
+        '**/*.log',
         '**/env.tmp',
         '**/supabase/migrations/**',
       ],
