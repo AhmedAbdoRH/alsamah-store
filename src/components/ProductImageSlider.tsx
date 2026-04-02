@@ -4,6 +4,7 @@ import { Navigation, Pagination, Autoplay } from 'swiper/modules';
 import 'swiper/css';
 import 'swiper/css/navigation';
 import 'swiper/css/pagination';
+import { getSupabaseImageVariantUrl } from '../utils/supabaseImage';
 
 interface ProductImageSliderProps {
   mainImageUrl: string | null;
@@ -19,9 +20,12 @@ export default function ProductImageSlider({ mainImageUrl, additionalImages }: P
   useEffect(() => {
     // Combine main image with additional images
     if (mainImageUrl) {
-      setImages([mainImageUrl, ...additionalImages]);
+      setImages([
+        getSupabaseImageVariantUrl(mainImageUrl, 'detail'),
+        ...additionalImages.map((image) => getSupabaseImageVariantUrl(image, 'detail')),
+      ]);
     } else {
-      setImages(additionalImages);
+      setImages(additionalImages.map((image) => getSupabaseImageVariantUrl(image, 'detail')));
     }
   }, [mainImageUrl, additionalImages]);
 
@@ -99,6 +103,10 @@ export default function ProductImageSlider({ mainImageUrl, additionalImages }: P
               src={imageUrl}
               alt={`Product ${index + 1}`}
               className="w-full h-full object-cover"
+              loading={index === 0 ? 'eager' : 'lazy'}
+              decoding="async"
+              fetchPriority={index === 0 ? 'high' : 'low'}
+              sizes="100vw"
             />
           </SwiperSlide>
         ))}

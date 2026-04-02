@@ -14,6 +14,8 @@ const greenTabClass = `bg-[${successGreen}] text-white shadow-lg border-b-4 bord
 const greenTabInactiveClass = 'bg-black/20 text-white';
 
 const STORE_SETTINGS_ID = "00000000-0000-0000-0000-000000000001";
+const PRODUCT_IMAGE_TARGET_MB = 0.15;
+const GENERAL_IMAGE_TARGET_MB = 2;
 
 interface AdminDashboardProps {
   onSettingsUpdate?: () => void;
@@ -315,7 +317,7 @@ export default function AdminDashboard({ onSettingsUpdate }: AdminDashboardProps
       if (!file.type.startsWith('image/')) throw new Error('الرجاء اختيار ملف صورة صالح');
 
       // قلل الحجم أولاً إذا لزم
-      const resized = await resizeImageIfNeeded(file, 2);
+      const resized = await resizeImageIfNeeded(file, PRODUCT_IMAGE_TARGET_MB, 'image/webp');
       // أزل الخلفية
       const processed = await removeBackgroundFromFile(resized);
 
@@ -632,8 +634,13 @@ export default function AdminDashboard({ onSettingsUpdate }: AdminDashboardProps
   };
     
   // دالة لضغط وتصغير الصورة إذا تجاوزت 2 ميجا
-  async function resizeImageIfNeeded(file: File, maxSizeMB = 2): Promise<File> {
-    if (file.size <= maxSizeMB * 1024 * 1024) return file;
+  async function resizeImageIfNeeded(
+    file: File,
+    maxSizeMB = GENERAL_IMAGE_TARGET_MB,
+    outputType?: string
+  ): Promise<File> {
+    const targetType = outputType || file.type || 'image/jpeg';
+    if (file.size <= maxSizeMB * 1024 * 1024 && targetType === file.type) return file;
     return new Promise((resolve, reject) => {
         const img = new window.Image();
         const reader = new FileReader();
@@ -652,16 +659,20 @@ export default function AdminDashboard({ onSettingsUpdate }: AdminDashboardProps
                 (blob) => {
                 if (!blob) return reject(new Error('فشل ضغط الصورة'));
                 if (blob.size <= maxSizeMB * 1024 * 1024 || (w < 300 || h < 300)) {
-                    resolve(new File([blob], file.name, { type: file.type }));
+                    const extension = targetType === 'image/webp'
+                      ? 'webp'
+                      : (targetType.split('/')[1] || file.name.split('.').pop() || 'jpg');
+                    const baseName = file.name.replace(/\.[^.]+$/, '');
+                    resolve(new File([blob], `${baseName}.${extension}`, { type: targetType }));
                 } else {
                     // قلل الأبعاد والجودة أكثر
                     w = Math.round(w * 0.85);
                     h = Math.round(h * 0.85);
-                    quality -= 0.07;
+                    quality = Math.max(0.35, quality - 0.07);
                     process();
                 }
                 },
-                file.type,
+                targetType,
                 quality
             );
             }
@@ -686,7 +697,9 @@ export default function AdminDashboard({ onSettingsUpdate }: AdminDashboardProps
     try {
       if (!file.type.startsWith('image/')) throw new Error('الرجاء اختيار ملف صورة صالح');
       
-      let fileToUpload = await resizeImageIfNeeded(file, 2); // This will be the file we eventually upload
+      const targetMaxSize = type === 'service' ? PRODUCT_IMAGE_TARGET_MB : GENERAL_IMAGE_TARGET_MB;
+      const targetMimeType = type === 'service' ? 'image/webp' : undefined;
+      let fileToUpload = await resizeImageIfNeeded(file, targetMaxSize, targetMimeType);
 
       const fileExt = fileToUpload.name.split('.').pop();
       const fileName = `${Date.now()}_${Math.random().toString(36).substring(2)}.${fileExt}`;
@@ -1256,7 +1269,7 @@ export default function AdminDashboard({ onSettingsUpdate }: AdminDashboardProps
       const uploadedUrls: string[] = [];
       for (const file of Array.from(files)) {
         if (!file.type.startsWith('image/')) continue;
-        const processedFile = await resizeImageIfNeeded(file, 2);
+        const processedFile = await resizeImageIfNeeded(file, PRODUCT_IMAGE_TARGET_MB, 'image/webp');
         const fileExt = processedFile.name.split('.').pop();
         const fileName = `${Date.now()}_${Math.random().toString(36).substring(2)}.${fileExt}`;
         const { error: uploadError } = await supabase.storage
@@ -1292,7 +1305,7 @@ export default function AdminDashboard({ onSettingsUpdate }: AdminDashboardProps
     setIsLoading(true);
     try {
         if (!file.type.startsWith('image/')) throw new Error('الرجاء اختيار ملف صورة صالح');
-        const processedFile = await resizeImageIfNeeded(file, 2);
+        const processedFile = await resizeImageIfNeeded(file, GENERAL_IMAGE_TARGET_MB);
         const fileExt = processedFile.name.split('.').pop();
         const fileName = `testimonial_${Date.now()}.${fileExt}`;
         

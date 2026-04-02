@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { MessageCircle, Sparkles, ShoppingCart, Check } from 'lucide-react';
 import { useCart } from '../contexts/CartContext';
 import type { ProductSize } from '../types/database';
+import { getSupabaseImageVariantUrl } from '../utils/supabaseImage';
 
 interface ProductCardProps {
   title: string;
@@ -122,8 +123,6 @@ export default function ProductCard({ title, description, imageUrl, price, saleP
     };
   }, [has_multiple_sizes, sizes, price, salePrice, title]);
 
-  console.log('ProductCard Debug - title:', title, 'has_multiple_sizes:', has_multiple_sizes, 'sizes:', sizes, 'price:', price, 'salePrice:', salePrice, 'displayPrice:', displayPrice, 'displaySalePrice:', displaySalePrice, 'pricingStrategy:', pricingStrategy);
-
   const handleContactClick = (e: React.MouseEvent) => {
     e.preventDefault();
     const productUrl = `${window.location.origin}/product/${id}`;
@@ -169,6 +168,8 @@ export default function ProductCard({ title, description, imageUrl, price, saleP
                 src="/logo.png" 
                 alt="معرض السماح للمفروشات" 
                 className="w-16 h-16 mb-4 opacity-80"
+                loading="lazy"
+                decoding="async"
                 onError={(e) => {
                   const target = e.target as HTMLImageElement;
                   target.style.display = 'none';
@@ -185,9 +186,13 @@ export default function ProductCard({ title, description, imageUrl, price, saleP
             </div>
           ) : (
             <img
-              src={imageUrl}
+              src={getSupabaseImageVariantUrl(imageUrl, 'card')}
               alt={title}
               className="absolute inset-0 w-full h-full object-cover"
+              loading="lazy"
+              decoding="async"
+              fetchPriority="low"
+              sizes="(min-width: 1024px) 33vw, (min-width: 768px) 50vw, 50vw"
               onError={(e) => {
                 const target = e.target as HTMLImageElement;
                 // Replace with fallback UI on error

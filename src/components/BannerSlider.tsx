@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import type { Banner } from '../types/database';
+import OptimizedImage from './OptimizedImage';
 
 interface BannerSliderProps {
   banners: Banner[];
@@ -26,6 +27,10 @@ export default function BannerSlider({ banners }: BannerSliderProps) {
 
   if (!banners.length) return null;
 
+  const totalBanners = banners.length;
+  const previousIndex = (current - 1 + totalBanners) % totalBanners;
+  const nextIndex = (current + 1) % totalBanners;
+
   return (
     <div
       className={`relative w-full h-[200px] md:h-[350px] lg:h-[500px] flex items-center justify-center overflow-hidden rounded-none mt-32 md:mt-32 fade-in-banner${fadeIn ? ' fade-in-active' : ''}`}
@@ -43,18 +48,31 @@ export default function BannerSlider({ banners }: BannerSliderProps) {
           transform: translateY(0);
         }
       `}</style>
-      {banners.map((banner, idx) => (
+      {banners.map((banner, idx) => {
+        const shouldRenderImage =
+          totalBanners <= 1 || idx === current || idx === previousIndex || idx === nextIndex;
+
+        return (
         <div
           key={banner.id}
           className={`absolute top-0 left-0 w-full h-full transition-opacity duration-700 ${idx === current ? 'opacity-100 z-10' : 'opacity-0 z-0'}`}
         >
           {banner.type === 'image' && banner.image_url ? (
-            <img
-              src={banner.image_url}
-              alt={banner.title || 'Banner'}
-              className="w-full h-full min-h-full object-cover object-center"
-              style={{ borderRadius: 0 }}
-            />
+            shouldRenderImage ? (
+              <OptimizedImage
+                src={banner.image_url}
+                alt={banner.title || 'Banner'}
+                variant="detail"
+                loading={idx === current ? 'eager' : 'lazy'}
+                fetchPriority={idx === current ? 'high' : 'low'}
+                sizes="100vw"
+                wrapperClassName="w-full h-full"
+                className="w-full h-full min-h-full object-cover object-center"
+                style={{ borderRadius: 0 }}
+                placeholder=""
+                rootMargin="200px 0px"
+              />
+            ) : null
           ) : (
             <div className="w-full h-full min-h-full flex flex-col justify-center items-center bg-white/5 backdrop-blur-xl p-8 sm:p-12 border border-white/10 shadow-2xl">
               {banner.title && (
@@ -76,7 +94,7 @@ export default function BannerSlider({ banners }: BannerSliderProps) {
             </div>
           )}
         </div>
-      ))}
+      )})}
       {/* المؤشرات */}
       {banners.length > 1 && (
         <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-0.5 z-20">

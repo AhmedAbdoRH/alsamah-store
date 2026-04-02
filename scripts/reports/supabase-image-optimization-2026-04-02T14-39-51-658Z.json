@@ -1,0 +1,47 @@
+{
+  "apply": false,
+  "dryRun": true,
+  "targetBytes": 153600,
+  "scannedUrls": 917,
+  "processedUrls": 1,
+  "skipped": [],
+  "optimized": [
+    {
+      "sourceUrl": "https://vubictefeijicaokjhlh.supabase.co/storage/v1/object/public/services/1757607876748_jdicxt0glw.png",
+      "sourceBytes": 1042415,
+      "bucket": "services",
+      "sourcePath": "1757607876748_jdicxt0glw.png",
+      "variants": {
+        "full": "https://vubictefeijicaokjhlh.supabase.co/storage/v1/object/public/services/optimized/legacy/1757607876748_jdicxt0glw-5d393caf__full.webp",
+        "detail": "https://vubictefeijicaokjhlh.supabase.co/storage/v1/object/public/services/optimized/legacy/1757607876748_jdicxt0glw-5d393caf__detail.webp",
+        "card": "https://vubictefeijicaokjhlh.supabase.co/storage/v1/object/public/services/optimized/legacy/1757607876748_jdicxt0glw-5d393caf__card.webp",
+        "thumb": "https://vubictefeijicaokjhlh.supabase.co/storage/v1/object/public/services/optimized/legacy/1757607876748_jdicxt0glw-5d393caf__thumb.webp"
+      }
+    }
+  ],
+  "updatedRows": [
+    {
+      "at": "2026-04-02T14:39:51.654Z",
+      "reason": "batch",
+      "stats": {
+        "services": 1,
+        "banners": 0,
+        "testimonials": 0,
+        "store_settings": 0,
+        "product_images": 0
+      }
+    },
+    {
+      "at": "2026-04-02T14:39:51.658Z",
+      "reason": "final",
+      "stats": {
+        "services": 0,
+        "banners": 0,
+        "testimonials": 0,
+        "store_settings": 0,
+        "product_images": 0
+      }
+    }
+  ],
+  "checkpointPath": null
+}

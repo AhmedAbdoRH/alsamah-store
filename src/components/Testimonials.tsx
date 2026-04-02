@@ -2,6 +2,7 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
 import type { Testimonial } from '../types/database';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import OptimizedImage from './OptimizedImage';
 
 // Constants for styling and animation
 const VISIBLE_CARDS = 3; // How many cards to prepare for the stack effect (current + next ones)
@@ -149,6 +150,11 @@ export default function Testimonials() {
               zIndex = 0;
             }
 
+            const shouldRenderImage =
+              positionFactor === 0 ||
+              positionFactor === -1 ||
+              (positionFactor > 0 && positionFactor < VISIBLE_CARDS);
+
 
             return (
               <div
@@ -162,12 +168,21 @@ export default function Testimonials() {
                 }}
               >
                 <div className="w-full h-full flex justify-center items-center p-2 md:p-4">
-                  <img
-                    src={testimonial.image_url}
-                    alt={`testimonial by client ${testimonial.id}`}
-                    className="max-w-full max-h-full object-contain rounded-2xl shadow-2xl"
-                    style={{ background: 'white' }} // Keep background for non-transparent parts of image
-                  />
+                  {shouldRenderImage ? (
+                    <OptimizedImage
+                      src={testimonial.image_url}
+                      alt={`testimonial by client ${testimonial.id}`}
+                      variant="detail"
+                      loading={positionFactor === 0 ? 'eager' : 'lazy'}
+                      fetchPriority={positionFactor === 0 ? 'high' : 'low'}
+                      sizes="100vw"
+                      wrapperClassName="w-full h-full flex justify-center items-center"
+                      className="max-w-full max-h-full object-contain rounded-2xl shadow-2xl"
+                      style={{ background: 'white' }}
+                      placeholder=""
+                      rootMargin="200px 0px"
+                    />
+                  ) : null}
                 </div>
               </div>
             );

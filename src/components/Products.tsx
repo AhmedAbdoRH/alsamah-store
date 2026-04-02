@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import type { Service, Category, Subcategory } from '../types/database';
 import { motion, AnimatePresence } from 'framer-motion';
+import { getSupabaseImageVariantUrl } from '../utils/supabaseImage';
 
 const lightGold = '#FFD700';
 const brownDark = '#3d2c1d';
@@ -25,7 +26,7 @@ const ProductCardDirect = ({ service }: { service: Service }) => {
     >
       <div className="relative aspect-[4/3] w-full">
         <img
-          src={imageUrl}
+          src={getSupabaseImageVariantUrl(imageUrl, 'card')}
           alt={service.title}
           className="absolute inset-0 w-full h-full object-cover"
           onError={(e) => { (e.target as HTMLImageElement).src = '/placeholder-product.jpg'; }}

@@ -6,6 +6,7 @@ import type { Category, StoreSettings, Service } from '../types/database';
 import { useCart } from '../contexts/CartContext';
 import { toast } from 'react-toastify';
 import { motion, AnimatePresence } from 'framer-motion';
+import { getSupabaseImageVariantUrl } from '../utils/supabaseImage';
 
 interface HeaderProps {
   storeSettings?: StoreSettings | null;
@@ -70,7 +71,11 @@ export default function Header({ storeSettings }: HeaderProps) {
       const { data: services, error: servicesError } = await supabase
         .from('services')
         .select(`
-          *,
+          id,
+          title,
+          description,
+          category_id,
+          image_url,
           product_images(image_url)
         `)
         .or(`title.ilike.%${query}%,description.ilike.%${query}%`)
@@ -265,6 +270,9 @@ export default function Header({ storeSettings }: HeaderProps) {
                 src={storeSettings?.logo_url || '/logo.png'}
                 alt={storeSettings?.store_name || 'معرض السماح للمفروشات'} 
                 className="h-16 md:h-20 w-auto"
+                loading="eager"
+                decoding="async"
+                fetchPriority="high"
               />
             </Link>
           </div>
@@ -313,9 +321,12 @@ export default function Header({ storeSettings }: HeaderProps) {
                   >
                     <div className="w-12 h-12 flex-shrink-0 rounded-md overflow-hidden bg-white/5 flex items-center justify-center">
                       <img 
-                        src={product.displayImage} 
+                        src={getSupabaseImageVariantUrl(product.displayImage, 'thumb')} 
                         alt={product.title}
                         className="w-full h-full object-cover"
+                        loading="lazy"
+                        decoding="async"
+                        fetchPriority="low"
                         onError={(e) => {
                           // Fallback to placeholder if image fails to load
                           const target = e.target as HTMLImageElement;
@@ -503,9 +514,12 @@ export default function Header({ storeSettings }: HeaderProps) {
                             <div key={item.id} className="flex items-center gap-3 py-3 border-b border-white/5 last:border-0">
                               <div className="w-16 h-16 flex-shrink-0 rounded-md overflow-hidden bg-white/5">
                                 <img 
-                                  src={item.imageUrl} 
+                                  src={getSupabaseImageVariantUrl(item.imageUrl, 'thumb')} 
                                   alt={item.title}
                                   className="w-full h-full object-cover"
+                                  loading="lazy"
+                                  decoding="async"
+                                  fetchPriority="low"
                                   onError={(e) => {
                                     const target = e.target as HTMLImageElement;
                                     target.src = '/placeholder-product.jpg';
@@ -640,9 +654,12 @@ export default function Header({ storeSettings }: HeaderProps) {
                         >
                           <div className="w-10 h-10 flex-shrink-0 rounded-md overflow-hidden bg-white/5 flex items-center justify-center">
                             <img 
-                              src={product.displayImage} 
+                              src={getSupabaseImageVariantUrl(product.displayImage, 'thumb')} 
                               alt={product.title}
                               className="w-full h-full object-cover"
+                              loading="lazy"
+                              decoding="async"
+                              fetchPriority="low"
                               onError={(e) => {
                                 const target = e.target as HTMLImageElement;
                                 target.src = '/placeholder-product.jpg';

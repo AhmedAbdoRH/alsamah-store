@@ -7,6 +7,7 @@ import { MessageCircle } from 'lucide-react';
 import { useCart } from '../contexts/CartContext';
 import { toast } from 'react-toastify';
 import ProductImageSlider from '../components/ProductImageSlider';
+import { getSupabaseImageVariantUrl } from '../utils/supabaseImage';
 
 
 export default function ProductDetails() {
@@ -98,7 +99,7 @@ export default function ProductDetails() {
 
       const suggestedWithSizes = (suggestedData || []).map(item => ({
         ...item,
-        sizes: (sizesData || []).filter(size => String(size.service_id) === String(service.id))
+        sizes: (sizesData || []).filter(size => String(size.service_id) === String(item.id))
       }));
         
       setSuggested(suggestedWithSizes);
@@ -326,9 +327,13 @@ export default function ProductDetails() {
                   onClick={() => navigate(`/product/${item.id}`)}
                 >
                   <img
-                    src={imageUrl || '/placeholder-product.jpg'}
+                    src={getSupabaseImageVariantUrl(imageUrl || '/placeholder-product.jpg', 'card')}
                     alt={item.title}
                     className="w-full h-24 md:h-40 object-cover rounded"
+                    loading="lazy"
+                    decoding="async"
+                    fetchPriority="low"
+                    sizes="(min-width: 768px) 220px, 160px"
                     onError={(e) => {
                       const target = e.target as HTMLImageElement;
                       target.src = '/placeholder-product.jpg';

@@ -1,12 +1,27 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useMemo, useRef } from 'react';
 import ServiceCard from './ServiceCard';
-import FacebookButton from './FacebookButton';
 import { supabase } from '../lib/supabase';
 import type { Service, Category, Subcategory } from '../types/database';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const lightGold = '#FFD700';
 const brownDark = '#3d2c1d';
+const SERVICE_PAGE_SIZE = 18;
+const SERVICE_SELECT_FIELDS = `
+  id,
+  category_id,
+  subcategory_id,
+  title,
+  description,
+  image_url,
+  gallery,
+  price,
+  sale_price,
+  has_multiple_sizes,
+  is_featured,
+  is_best_seller,
+  created_at
+`;
 
 export default function Services() {
   const [services, setServices] = useState<Service[]>([]);
@@ -16,15 +31,29 @@ export default function Services() {
   const [selectedSubcategory, setSelectedSubcategory] = useState<string | null>(null);
   const [openCategoryId, setOpenCategoryId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [hasMoreServices, setHasMoreServices] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [hasFeaturedProducts, setHasFeaturedProducts] = useState(false);
   const [hasBestSellerProducts, setHasBestSellerProducts] = useState(false);
+  const loadMoreRef = useRef<HTMLDivElement | null>(null);
+  const requestKeyRef = useRef(0);
+  const servicesLengthRef = useRef(0);
+
+  const visibleSubcategories = useMemo(
+    () => subcategories.filter((subcategory) => subcategory.category_id === openCategoryId),
+    [openCategoryId, subcategories]
+  );
 
   useEffect(() => {
-    fetchCategories();
-    fetchServices();
-    fetchSubcategories();
+    void fetchCategories();
+    void fetchSubcategories();
+    void fetchSpecialFlags();
   }, []);
+
+  useEffect(() => {
+    servicesLengthRef.current = services.length;
+  }, [services.length]);
 
   const fetchCategories = async () => {
     try {
@@ -40,46 +69,113 @@ export default function Services() {
     }
   };
 
-  const fetchServices = useCallback(async () => {
+  const buildServicesQuery = useCallback(() => {
+    let query = supabase
+      .from('services')
+      .select(SERVICE_SELECT_FIELDS, { count: 'exact' })
+      .order('created_at', { ascending: false });
+
+    if (selectedCategory && selectedCategory !== 'featured' && selectedCategory !== 'best_sellers') {
+      query = query.eq('category_id', selectedCategory);
+    } else if (selectedCategory === 'featured') {
+      query = query.eq('is_featured', true);
+    } else if (selectedCategory === 'best_sellers') {
+      query = query.eq('is_best_seller', true);
+    }
+
+    if (selectedSubcategory) {
+      query = query.eq('subcategory_id', selectedSubcategory);
+    }
+
+    return query;
+  }, [selectedCategory, selectedSubcategory]);
+
+  const enrichServicesWithSizes = useCallback(async (servicesData: Service[]) => {
+    if (!servicesData.length) {
+      return [];
+    }
+
+    const serviceIds = servicesData.map((service) => service.id);
+    const { data: sizesData, error: sizesError } = await supabase
+      .from('product_sizes')
+      .select('*')
+      .in('service_id', serviceIds);
+
+    if (sizesError) {
+      throw sizesError;
+    }
+
+    return servicesData.map((service) => ({
+      ...service,
+      sizes: (sizesData || []).filter((size) => String(size.service_id) === String(service.id)),
+    }));
+  }, []);
+
+  const fetchSpecialFlags = useCallback(async () => {
     try {
-      setIsLoading(true);
-      setError(null);
+      const [
+        { count: featuredCount, error: featuredError },
+        { count: bestSellerCount, error: bestSellerError },
+      ] = await Promise.all([
+        supabase.from('services').select('id', { count: 'exact', head: true }).eq('is_featured', true),
+        supabase.from('services').select('id', { count: 'exact', head: true }).eq('is_best_seller', true),
+      ]);
 
-      // Fetch all services
-      const { data: servicesData, error: servicesError } = await supabase
-        .from('services')
-        .select('*')
-        .order('created_at', { ascending: false });
+      if (featuredError) throw featuredError;
+      if (bestSellerError) throw bestSellerError;
 
-      if (servicesError) throw servicesError;
-
-      // Fetch all product sizes separately to avoid relationship errors
-      const { data: sizesData, error: sizesError } = await supabase
-        .from('product_sizes')
-        .select('*');
-
-      if (sizesError) throw sizesError;
-
-      // Map sizes to services client-side
-      const servicesWithSizes = (servicesData || []).map(service => ({
-        ...service,
-        sizes: (sizesData || []).filter(size => String(size.service_id) === String(service.id))
-      }));
-
-      setServices(servicesWithSizes);
-
-      // Check if we have any featured or best seller products
-      const hasFeatured = servicesWithSizes.some(service => service.is_featured) || false;
-      const hasBestSellers = servicesWithSizes.some(service => service.is_best_seller) || false;
-      
-      setHasFeaturedProducts(hasFeatured);
-      setHasBestSellerProducts(hasBestSellers);
-    } catch (err: any) {
-      setError(err.message);
-    } finally {
-      setIsLoading(false);
+      setHasFeaturedProducts((featuredCount || 0) > 0);
+      setHasBestSellerProducts((bestSellerCount || 0) > 0);
+    } catch (err) {
+      console.error('Failed to fetch special product flags', err);
     }
   }, []);
+
+  const fetchServices = useCallback(async (reset = false) => {
+    const requestKey = ++requestKeyRef.current;
+
+    try {
+      if (reset) {
+        setIsLoading(true);
+        setServices([]);
+      } else {
+        setIsLoadingMore(true);
+      }
+
+      setError(null);
+
+      const from = reset ? 0 : servicesLengthRef.current;
+      const to = from + SERVICE_PAGE_SIZE - 1;
+      const { data: servicesData, error: servicesError, count } = await buildServicesQuery().range(from, to);
+
+      if (requestKey !== requestKeyRef.current) {
+        return;
+      }
+
+      if (servicesError) throw servicesError;
+      const servicesWithSizes = await enrichServicesWithSizes((servicesData || []) as Service[]);
+
+      if (requestKey !== requestKeyRef.current) {
+        return;
+      }
+
+      setServices((previousServices) =>
+        reset ? servicesWithSizes : [...previousServices, ...servicesWithSizes]
+      );
+
+      const loadedCount = from + servicesWithSizes.length;
+      setHasMoreServices(loadedCount < (count || 0));
+    } catch (err: any) {
+      if (requestKey === requestKeyRef.current) {
+        setError(err.message);
+      }
+    } finally {
+      if (requestKey === requestKeyRef.current) {
+        setIsLoading(false);
+        setIsLoadingMore(false);
+      }
+    }
+  }, [buildServicesQuery, enrichServicesWithSizes]);
 
   const fetchSubcategories = async () => {
     try {
@@ -101,25 +197,30 @@ export default function Services() {
     }
   };
 
-  const filteredServices = useCallback((): Service[] => {
-    let filtered = services;
-    
-    // Filter by category first
-    if (selectedCategory && selectedCategory !== 'featured' && selectedCategory !== 'best_sellers') {
-      filtered = filtered.filter(service => service.category_id === selectedCategory);
-    } else if (selectedCategory === 'featured') {
-      filtered = filtered.filter(service => service.is_featured === true);
-    } else if (selectedCategory === 'best_sellers') {
-      filtered = filtered.filter(service => service.is_best_seller === true);
+  useEffect(() => {
+    void fetchServices(true);
+  }, [fetchServices]);
+
+  useEffect(() => {
+    const node = loadMoreRef.current;
+
+    if (!node || isLoading || isLoadingMore || !hasMoreServices) {
+      return;
     }
-    
-    // Then filter by subcategory if selected
-    if (selectedSubcategory) {
-      filtered = filtered.filter(service => service.subcategory_id === selectedSubcategory);
-    }
-    
-    return filtered;
-  }, [selectedCategory, selectedSubcategory, services]);
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting) {
+          void fetchServices(false);
+        }
+      },
+      { rootMargin: '600px 0px' }
+    );
+
+    observer.observe(node);
+
+    return () => observer.disconnect();
+  }, [fetchServices, hasMoreServices, isLoading, isLoadingMore]);
 
   const handleCategoryClick = (categoryId: string) => {
     setSelectedCategory(categoryId);
@@ -342,9 +443,7 @@ export default function Services() {
               
               {/* الأقسام الفرعية */}
               <AnimatePresence>
-                {subcategories
-                  .filter(sc => sc.category_id === openCategoryId)
-                  .map((subcategory, idx) => (
+                {visibleSubcategories.map((subcategory, idx) => (
                     <motion.button
                       key={subcategory.id}
                       onClick={() => handleSubcategoryClick(subcategory.id)}
@@ -378,8 +477,8 @@ export default function Services() {
           }}
         >
           <AnimatePresence mode="wait">
-            {filteredServices().length > 0 ? (
-              filteredServices().map((service) => (
+            {services.length > 0 ? (
+              services.map((service) => (
                 <motion.div
                   key={service.id}
                   variants={{
@@ -415,6 +514,11 @@ export default function Services() {
             )}
           </AnimatePresence>
         </motion.div>
+        {(hasMoreServices || isLoadingMore) && (
+          <div ref={loadMoreRef} className="flex justify-center py-8">
+            <div className="h-8 w-8 rounded-full border-2 border-white/30 border-t-white animate-spin" />
+          </div>
+        )}
       </motion.div>
     </section>
   );

@@ -4,6 +4,7 @@ import { supabase } from '../lib/supabase';
 import type { Service } from '../types/database';
 import { MessageCircle } from 'lucide-react';
 import { Helmet } from 'react-helmet-async';
+import { getSupabaseImageVariantUrl } from '../utils/supabaseImage';
 
 function usePrevious<T>(value: T): T | undefined {
   const ref = useRef<T>();
@@ -224,9 +225,13 @@ export default function ProductDetails() {
                   <div className="w-full aspect-[4/3] bg-gray-200 relative rounded-t-lg md:rounded-none md:rounded-s-lg overflow-hidden">
                     {prevImageIndexState !== null && prevImageIndexState !== currentImage && (
                       <img
-                        src={images[prevImageIndexState]}
+                        src={getSupabaseImageVariantUrl(images[prevImageIndexState], 'detail')}
                         alt=""
                         className="absolute inset-0 w-full h-full object-cover"
+                        loading="eager"
+                        decoding="async"
+                        fetchPriority="low"
+                        sizes="100vw"
                         style={{
                           transform: prevTransform,
                           zIndex: 10,
@@ -239,9 +244,13 @@ export default function ProductDetails() {
                       />
                     )}
                     <img
-                      src={images[currentImage] || ''}
+                      src={getSupabaseImageVariantUrl(images[currentImage] || '', 'detail')}
                       alt={service.title}
                       className="absolute inset-0 w-full h-full object-cover"
+                      loading="eager"
+                      decoding="async"
+                      fetchPriority="high"
+                      sizes="100vw"
                       style={{
                         transform: currentTransform,
                         zIndex: 5,
@@ -337,9 +346,13 @@ export default function ProductDetails() {
                     onClick={() => navigate(`/product/${item.id}`)}
                   >
                     <img
-                      src={imageUrl}
+                      src={getSupabaseImageVariantUrl(imageUrl, 'card')}
                       alt={item.title}
                       className="w-full h-24 md:h-40 object-cover rounded"
+                      loading="lazy"
+                      decoding="async"
+                      fetchPriority="low"
+                      sizes="(min-width: 768px) 220px, 160px"
                     />
                     <div className="mt-2 text-sm md:text-base font-bold text-secondary truncate">{item.title}</div>
                     <div className="text-xs md:text-sm text-accent">{item.price}</div>

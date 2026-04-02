@@ -1,61 +1,117 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
+import {
+  getSupabaseFullImageUrl,
+  getSupabaseImageVariantUrl,
+  type SupabaseImageVariant,
+} from '../utils/supabaseImage';
 
 interface OptimizedImageProps {
-  src: string;
+  src: string | null | undefined;
   alt: string;
   className?: string;
+  wrapperClassName?: string;
   width?: number;
   height?: number;
-  priority?: boolean;
+  loading?: 'lazy' | 'eager';
+  decoding?: 'async' | 'auto' | 'sync';
+  variant?: SupabaseImageVariant;
   placeholder?: string;
+  rootMargin?: string;
+  fetchPriority?: 'high' | 'low' | 'auto';
+  sizes?: string;
+  style?: React.CSSProperties;
+  draggable?: boolean;
 }
 
-export default function OptimizedImage({ 
-  src, 
-  alt, 
-  className = '', 
-  width, 
-  height, 
-  priority = false,
-  placeholder = '/placeholder-product.jpg'
-}: OptimizedImageProps) {
-  const [isLoading, setIsLoading] = useState(true);
-  const [hasError, setHasError] = useState(false);
+const TRANSPARENT_PIXEL =
+  'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==';
 
-  const handleLoad = () => {
-    setIsLoading(false);
-  };
+export default function OptimizedImage({
+  src,
+  alt,
+  className = '',
+  wrapperClassName = '',
+  width,
+  height,
+  loading = 'lazy',
+  decoding = 'async',
+  variant = 'full',
+  placeholder = '/placeholder-product.jpg',
+  rootMargin = '400px 0px',
+  fetchPriority = 'auto',
+  sizes,
+  style,
+  draggable,
+}: OptimizedImageProps) {
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const eagerLoad = loading === 'eager';
+  const fallbackSrc = getSupabaseFullImageUrl(src) || src || placeholder || TRANSPARENT_PIXEL;
+  const preferredSrc = getSupabaseImageVariantUrl(fallbackSrc, variant) || fallbackSrc;
+  const [shouldLoad, setShouldLoad] = useState(eagerLoad);
+  const [displaySrc, setDisplaySrc] = useState(eagerLoad ? preferredSrc : placeholder || TRANSPARENT_PIXEL);
+
+  useEffect(() => {
+    if (eagerLoad) {
+      setShouldLoad(true);
+      return;
+    }
+
+    const node = containerRef.current;
+
+    if (!node) {
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting) {
+          setShouldLoad(true);
+          observer.disconnect();
+        }
+      },
+      { rootMargin }
+    );
+
+    observer.observe(node);
+
+    return () => observer.disconnect();
+  }, [eagerLoad, rootMargin]);
+
+  useEffect(() => {
+    setDisplaySrc(shouldLoad ? preferredSrc : placeholder || TRANSPARENT_PIXEL);
+  }, [placeholder, preferredSrc, shouldLoad]);
 
   const handleError = () => {
-    setIsLoading(false);
-    setHasError(true);
+    if (displaySrc !== fallbackSrc) {
+      setDisplaySrc(fallbackSrc);
+      return;
+    }
+
+    if (displaySrc !== placeholder && placeholder) {
+      setDisplaySrc(placeholder);
+      return;
+    }
+
+    if (displaySrc !== TRANSPARENT_PIXEL) {
+      setDisplaySrc(TRANSPARENT_PIXEL);
+    }
   };
 
   return (
-    <div className={`relative overflow-hidden ${className}`}>
-      {isLoading && (
-        <div className="absolute inset-0 bg-gray-200 animate-pulse flex items-center justify-center">
-          <div className="w-8 h-8 border-2 border-gray-300 border-t-blue-500 rounded-full animate-spin"></div>
-        </div>
-      )}
-      
+    <div ref={containerRef} className={wrapperClassName}>
       <img
-        src={hasError ? placeholder : src}
+        src={displaySrc}
         alt={alt}
         width={width}
         height={height}
-        loading={priority ? 'eager' : 'lazy'}
-        decoding="async"
-        onLoad={handleLoad}
+        loading={loading}
+        decoding={decoding}
+        fetchPriority={fetchPriority}
+        sizes={sizes}
         onError={handleError}
-        className={`transition-opacity duration-300 ${
-          isLoading ? 'opacity-0' : 'opacity-100'
-        } ${className}`}
-        style={{
-          objectFit: 'cover',
-          width: width ? `${width}px` : '100%',
-          height: height ? `${height}px` : 'auto',
-        }}
+        className={className}
+        style={style}
+        draggable={draggable}
       />
     </div>
   );

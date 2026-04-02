@@ -9,7 +9,9 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "migrate": "node scripts/migrate-database.js",
-    "migrate:interactive": "node scripts/interactive-migrate.js"
+    "migrate:interactive": "node scripts/interactive-migrate.js",
+    "optimize:images": "node scripts/optimize-supabase-images.js --apply",
+    "optimize:images:dry": "node scripts/optimize-supabase-images.js --dry-run"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.39.7",
@@ -20,6 +22,7 @@
     "react-helmet-async": "^2.0.5",
     "react-router-dom": "^6.22.2",
     "react-toastify": "^11.0.5",
+    "sharp": "^0.34.5",
     "swiper": "^11.2.10"
   },
   "devDependencies": {
