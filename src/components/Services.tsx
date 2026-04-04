@@ -36,7 +36,6 @@ export default function Services() {
   const [error, setError] = useState<string | null>(null);
   const [hasFeaturedProducts, setHasFeaturedProducts] = useState(false);
   const [hasBestSellerProducts, setHasBestSellerProducts] = useState(false);
-  const loadMoreRef = useRef<HTMLDivElement | null>(null);
   const requestKeyRef = useRef(0);
   const servicesLengthRef = useRef(0);
 
@@ -201,27 +200,6 @@ export default function Services() {
     void fetchServices(true);
   }, [fetchServices]);
 
-  useEffect(() => {
-    const node = loadMoreRef.current;
-
-    if (!node || isLoading || isLoadingMore || !hasMoreServices) {
-      return;
-    }
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0]?.isIntersecting) {
-          void fetchServices(false);
-        }
-      },
-      { rootMargin: '600px 0px' }
-    );
-
-    observer.observe(node);
-
-    return () => observer.disconnect();
-  }, [fetchServices, hasMoreServices, isLoading, isLoadingMore]);
-
   const handleCategoryClick = (categoryId: string) => {
     setSelectedCategory(categoryId);
     setSelectedSubcategory(null); // Reset subcategory selection
@@ -230,6 +208,12 @@ export default function Services() {
 
   const handleSubcategoryClick = (subcategoryId: string | null) => {
     setSelectedSubcategory(subcategoryId);
+  };
+
+  const handleLoadMore = () => {
+    if (!isLoadingMore && hasMoreServices) {
+      void fetchServices(false);
+    }
   };
 
   if (isLoading) {
@@ -515,8 +499,15 @@ export default function Services() {
           </AnimatePresence>
         </motion.div>
         {(hasMoreServices || isLoadingMore) && (
-          <div ref={loadMoreRef} className="flex justify-center py-8">
-            <div className="h-8 w-8 rounded-full border-2 border-white/30 border-t-white animate-spin" />
+          <div className="flex justify-center pt-10">
+            <button
+              type="button"
+              onClick={handleLoadMore}
+              disabled={isLoadingMore}
+              className="min-w-[220px] rounded-2xl bg-gradient-to-r from-[#FFD700] to-[#d4af37] px-8 py-4 text-lg font-bold text-black shadow-lg transition-all duration-300 hover:scale-[1.02] hover:shadow-xl disabled:cursor-not-allowed disabled:opacity-70"
+            >
+              {isLoadingMore ? 'جاري تحميل المزيد...' : 'تحميل المزيد'}
+            </button>
           </div>
         )}
       </motion.div>
