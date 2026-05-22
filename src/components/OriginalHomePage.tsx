@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { supabase } from '../lib/supabase';
 import { CartProvider } from '../contexts/CartContext';
@@ -241,6 +241,8 @@ function OriginalHomePage() {
   }
 
   const Layout = ({ children, banners: layoutBanners }: LayoutProps) => {
+    const location = useLocation();
+    
     // Filter banners for different purposes
     const mainBanners = layoutBanners.filter(banner => 
       banner.type === 'image' && banner.is_active
@@ -264,14 +266,14 @@ function OriginalHomePage() {
         }}
       >
         <Header storeSettings={storeSettings} />
-        {window.location.pathname === '/' && mainBanners.length > 0 && (
+        {location.pathname === '/' && mainBanners.length > 0 && (
           <BannerSlider banners={mainBanners} />
         )}
-        {window.location.pathname === '/' && stripBanners.length > 0 && (
+        {location.pathname === '/' && stripBanners.length > 0 && (
           <BannerStrip banners={stripBanners} />
         )}
         <MainFade>{children}</MainFade>
-        {window.location.pathname === '/' && (
+        {location.pathname === '/' && (
           <Testimonials />
         )}
         <Footer storeSettings={storeSettings} />
